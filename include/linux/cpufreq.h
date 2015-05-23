@@ -445,6 +445,9 @@ extern struct cpufreq_governor cpufreq_gov_nebula;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_CYAN)
 extern struct cpufreq_governor cpufreq_gov_cyan;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_cyan)
+#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_ELEMENTALX)
+extern struct cpufreq_governor cpufreq_gov_elementalx;
+#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_elementalx)
 #endif
 
 /*********************************************************************
