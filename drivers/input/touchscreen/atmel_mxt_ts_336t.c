@@ -543,6 +543,10 @@
 #define MXT_MAX_FINGER_NUM	16
 #define BOOTLOADER_1664_1188	1
 
+#define MXT_GESTURE_DBL_TAP	0x1
+#define MXT_GESTURE_SWIPE_UP	0x2
+#define MXT_GESTURES_ALL	( MXT_GESTURE_DBL_TAP | MXT_GESTURE_SWIPE_UP )
+
 struct mxt_info {
 	u8 family_id;
 	u8 variant_id;
@@ -4142,21 +4146,20 @@ static ssize_t mxt_wakeup_mode_show(struct device *dev,
 	return count;
 }
 
-static void mxt_enable_gesture_mode(struct mxt_data *data, bool enable)
+static void mxt_enable_gesture_mode(struct mxt_data *data, u8 enable)
 {
 	u8 t81_val, t93_val;
 	int error;
 
-	t81_val = enable ? 7 : 0;
-	t93_val = enable ? 0x0F : 0x0D;
-
 	/* T81 is for swipe up */
+	t81_val = (enable & MXT_GESTURE_SWIPE_UP) ? 7 : 0;
 	error = mxt_write_object(data, MXT_TOUCH_MORE_GESTURE_T81,
 				MXT_GESTURE_CTRL, t81_val);
 	if (error)
 		dev_info(&data->client->dev, "write to t81 enabled failed!\n");
 
 	/* T93 is for double tap */
+	t93_val = (enable & MXT_GESTURE_DBL_TAP) ? 0x0F : 0x0D;
 	error = mxt_write_object(data, MXT_TOUCH_SEQUENCE_LOGGER_T93,
 				MXT_DBL_TAP_CTRL, t93_val);
 	if (error)
@@ -4178,8 +4181,12 @@ static ssize_t  mxt_wakeup_mode_store(struct device *dev,
 
 	error = strict_strtoul(buf, 0, &val);
 
-	if (!error)
-		data->wakeup_gesture_mode = (u8)val;
+	if (!error) {
+		/* sanitize input */
+		if ((val == 0) || (val & MXT_GESTURES_ALL)) {
+			data->wakeup_gesture_mode = (u8)val;
+		}
+	}
 
 	if (data->is_stopped) {
 		/* Set wakeup gesture mode in deepsleep,
@@ -4770,7 +4777,7 @@ static void mxt_stop(struct mxt_data *data)
 		data->is_wakeup_by_gesture = false;
 		mxt_set_power_cfg(data, MXT_POWER_CFG_WAKEUP_GESTURE);
 		mxt_set_gesture_wake_up(data, true);
-		mxt_enable_gesture_mode(data, true);
+		mxt_enable_gesture_mode(data, data->wakeup_gesture_mode);
 	} else {
 		if (data->is_stopped)
 			return;
