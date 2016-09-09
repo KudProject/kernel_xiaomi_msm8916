@@ -945,6 +945,8 @@ int mdss_mdp_cmd_intfs_stop(struct mdss_mdp_ctl *ctl, int session,
 		ctx->pp_num, NULL, NULL);
 
 	memset(ctx, 0, sizeof(*ctx));
+	/* intf stopped,  no more kickoff */
+	ctx->intf_stopped = 1;
 
 end:
 	pr_debug("%s:-\n", __func__);
