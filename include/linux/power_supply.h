@@ -245,6 +245,7 @@ struct power_supply {
 
 	/* For APM emulation, think legacy userspace. */
 	int use_for_apm;
+	u8  bms_psy_ok;
 
 	/* private */
 	struct device *dev;
