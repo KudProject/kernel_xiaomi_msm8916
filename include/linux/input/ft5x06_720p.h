@@ -299,12 +299,8 @@ struct ft5x06_ts_data {
 
 #define CTP_CHARGER_DETECT 1
 
-#define CTP_PROC_INTERFACE 1
-#define CTP_LOCKDOWN_INFO  1
 #define BoardId_SUPPORT_FW	 1
 
-
-#define WT_ADD_CTP_INFO   1
 
 #define CTP_DEBUG_ON 1
 #define CTP_DEBUG_FUNC_ON 0
