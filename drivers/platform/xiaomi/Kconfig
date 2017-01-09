@@ -21,4 +21,10 @@ menu "Xiaomi board selection"
 		help
 		  Support for Xiaomi Redmi 3/Pro variant
 
+	config MACH_XIAOMI_FERRARI
+		bool "XIAOMI_FERRARI board"
+		select MACH_XIAOMI_MSM8916
+		help
+		  Support for Xiaomi Mi 4i variant
+
 endmenu
