@@ -55,7 +55,11 @@ obj-$(CONFIG_SMB349_USB_CHARGER)   += smb349-charger.o
 obj-$(CONFIG_SMB350_CHARGER)   += smb350_charger.o
 obj-$(CONFIG_SMB1351_USB_CHARGER) += smb1351-charger.o
 obj-$(CONFIG_SMB135X_CHARGER)   += smb135x-charger.o
+ifeq ($(CONFIG_MACH_XIAOMI_FERRARI),y)
+obj-$(CONFIG_SMB1360_CHARGER_FG) += smb1360-charger-fg-ferrari.o
+else
 obj-$(CONFIG_SMB1360_CHARGER_FG) += smb1360-charger-fg.o
+endif
 obj-$(CONFIG_SMB358_CHARGER)	+= smb358-charger.o
 obj-$(CONFIG_BATTERY_CW2015)	+= cw2015_battery.o ###@hfs add for a9/11
 obj-$(CONFIG_BATTERY_BQ28400)	+= bq28400_battery.o
