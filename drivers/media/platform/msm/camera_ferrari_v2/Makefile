@@ -1,12 +1,12 @@
-ccflags-y += -Idrivers/media/platform/msm/camera_v2
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/sensor
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/codecs
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/isps
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/pproc
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/msm_vb2
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/camera
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/jpeg_10
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/fd
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2/sensor
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2/codecs
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2/isps
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2/pproc
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2/msm_vb2
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2/camera
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2/jpeg_10
+ccflags-y += -Idrivers/media/platform/msm/camera_ferrari_v2/fd
 
 obj-$(CONFIG_MSMB_CAMERA) += msm.o
 obj-$(CONFIG_MSMB_CAMERA) += camera/

@@ -17,8 +17,10 @@
 #define MSM_CAM_V4L2_IOCTL_NOTIFY_ERROR \
 	_IOW('V', BASE_VIDIOC_PRIVATE + 33, struct msm_v4l2_event_data)
 
+#ifndef CONFIG_XIAOMI_FERRARI_CAMERA
 #define MSM_CAM_V4L2_IOCTL_NOTIFY_FREEZE \
 	_IOW('V', BASE_VIDIOC_PRIVATE + 34, struct msm_v4l2_event_data)
+#endif
 
 #ifdef CONFIG_COMPAT
 #define MSM_CAM_V4L2_IOCTL_NOTIFY32 \
@@ -33,9 +35,11 @@
 #define MSM_CAM_V4L2_IOCTL_NOTIFY_ERROR32 \
 	_IOW('V', BASE_VIDIOC_PRIVATE + 33, struct v4l2_event32)
 
+#ifndef CONFIG_XIAOMI_FERRARI_CAMERA
 #define MSM_CAM_V4L2_IOCTL_NOTIFY_FREEZE32 \
 	_IOW('V', BASE_VIDIOC_PRIVATE + 34, struct v4l2_event32)
 
+#endif
 #endif
 
 #define QCAMERA_DEVICE_GROUP_ID	1
