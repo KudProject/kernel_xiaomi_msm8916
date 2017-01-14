@@ -106,8 +106,13 @@
  * Invalid voltage range for the detection
  * of plug type with current source
  */
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+#define WCD9XXX_CS_MEAS_INVALD_RANGE_LOW_MV 110
+#define WCD9XXX_CS_MEAS_INVALD_RANGE_HIGH_MV 150
+#else
 #define WCD9XXX_CS_MEAS_INVALD_RANGE_LOW_MV 160
 #define WCD9XXX_CS_MEAS_INVALD_RANGE_HIGH_MV 265
+#endif
 
 /*
  * Threshold used to detect euro headset
