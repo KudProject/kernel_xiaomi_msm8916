@@ -111,6 +111,11 @@
 #define IRQ3_SOC_EMPTY_BIT		BIT(1)
 #define IRQ3_SOC_FULL_BIT		BIT(0)
 
+#define OTG_UVLO_REG			0x12
+#define OTG_UVLO_THR_MASK		SMB1360_MASK(4, 2)
+#define OTG_UVLO_THR_SHIFT		2
+#define OTG_UVLO_THR			0x02
+
 #define CHG_CURRENT_REG			0x13
 #define FASTCHG_CURR_MASK		SMB1360_MASK(4, 2)
 #define FASTCHG_CURR_SHIFT		2
@@ -260,6 +265,7 @@ enum fg_i2c_access_type {
 enum {
 	BATTERY_PROFILE_A,
 	BATTERY_PROFILE_B,
+	BATTERY_PROFILE_C,
 	BATTERY_PROFILE_MAX,
 };
 
@@ -332,6 +338,7 @@ struct smb1360_chip {
 	bool				rsense_10mohm;
 	bool				otg_fet_present;
 	bool				fet_gain_enabled;
+	bool				otp_rslow_config;
 	int				otg_fet_enable_gpio;
 
 	/* status tracking */
@@ -863,6 +870,7 @@ static enum power_supply_property smb1360_battery_properties[] = {
 	POWER_SUPPLY_PROP_RESISTANCE,
 	POWER_SUPPLY_PROP_TEMP,
 	POWER_SUPPLY_PROP_SYSTEM_TEMP_LEVEL,
+	POWER_SUPPLY_PROP_TECHNOLOGY,
 };
 
 static int smb1360_get_prop_batt_present(struct smb1360_chip *chip)
@@ -1429,6 +1437,9 @@ static int smb1360_battery_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_SYSTEM_TEMP_LEVEL:
 		val->intval = chip->therm_lvl_sel;
 		break;
+	case POWER_SUPPLY_PROP_TECHNOLOGY:
+		val->intval = POWER_SUPPLY_TECHNOLOGY_LIPO;
+		break;
 	default:
 		return -EINVAL;
 	}
@@ -1853,6 +1864,53 @@ static int smb1360_adjust_current_gain(struct smb1360_chip *chip,
 	return 0;
 }
 
+static int smb1360_otp_rslow_cfg(struct smb1360_chip *chip)
+{
+	int rc, i;
+	u8 reg, profile_index;
+	/* Col1: Profile0, Col2: Profile1 */
+	u8 reg_val_mapping[][3] = {
+			{0xE4, 0x56, 0x56},
+			{0xE5, 0x7B, 0x15},
+			{0xE6, 0x57, 0x57},
+			{0xE7, 0x70, 0x71},
+			{0xF0, 0x0A, 0x0F},
+			{0xF1, 0x00, 0x00},
+	};
+
+	rc = smb1360_read(chip, SHDW_FG_BATT_STATUS, &reg);
+	if (rc) {
+		pr_err("Couldn't read FG_BATT_STATUS rc=%d\n", rc);
+		return rc;
+	}
+	profile_index = (reg & BATTERY_PROFILE_BIT) ? 2 : 1;
+	pr_debug("batt_status(0x60) = 0x%x profile_index=%d\n", reg,
+							profile_index);
+
+	for (i = 0; i < ARRAY_SIZE(reg_val_mapping); i++) {
+
+		if (reg_val_mapping[i][0] == 0xF0) {
+			rc = smb1360_fg_read(chip, reg_val_mapping[i][0], &reg);
+			reg = (reg & 0xF0) | reg_val_mapping[i][profile_index];
+			reg_val_mapping[i][profile_index] = reg;
+		}
+
+		pr_debug("Writing reg_add=%x value=%x\n",
+			reg_val_mapping[i][0],
+			reg_val_mapping[i][profile_index]);
+
+		rc = smb1360_fg_write(chip, reg_val_mapping[i][0],
+				reg_val_mapping[i][profile_index]);
+		if (rc) {
+			pr_err("Write fg address 0x%x failed, rc = %d\n",
+					reg_val_mapping[i][0], rc);
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 static int smb1360_otp_gain_config(struct smb1360_chip *chip, int gain_factor)
 {
 	int rc = 0;
@@ -1874,6 +1932,14 @@ static int smb1360_otp_gain_config(struct smb1360_chip *chip, int gain_factor)
 	if (rc) {
 		pr_err("Unable to modify current gain rc=%d\n", rc);
 		goto restore_fg;
+	}
+
+	if (chip->otp_rslow_config) {
+		rc = smb1360_otp_rslow_cfg(chip);
+		if (rc) {
+			pr_err("Unable configure OTP for rlsow rc=%d\n", rc);
+			goto restore_fg;
+		}
 	}
 
 	rc = smb1360_masked_write(chip, CFG_FG_BATT_CTRL_REG,
@@ -2801,6 +2867,22 @@ static int smb1360_check_batt_profile(struct smb1360_chip *chip)
 		pr_err("None of the battery-profiles match the connected-RID\n");
 		return 0;
 	} else {
+
+		switch (i) {
+			case BATTERY_PROFILE_A:
+				pr_info("SAMSUNG battery\n");
+				break;
+			case BATTERY_PROFILE_B:
+				pr_info("SONY battery\n");
+				break;
+			case BATTERY_PROFILE_C:
+				pr_info("ATL battery\n");
+				break;
+			default:
+				break;
+		}
+		i = i % 2;
+
 		if (i == loaded_profile) {
 			pr_debug("Loaded Profile-RID == connected-RID\n");
 			return 0;
@@ -3416,7 +3498,11 @@ static int smb1360_hw_init(struct smb1360_chip *chip)
 		return rc;
 	}
 
-	if (chip->rsense_10mohm) {
+	rc = smb1360_check_batt_profile(chip);
+	if (rc)
+		pr_err("Unable to modify battery profile\n");
+
+	if (chip->rsense_10mohm || chip->otp_rslow_config) {
 		rc = smb1360_otp_gain_config(chip, 2);
 		if (rc < 0) {
 			pr_err("Couldn't config OTP rc=%d\n", rc);
@@ -3442,10 +3528,6 @@ static int smb1360_hw_init(struct smb1360_chip *chip)
 			return rc;
 		}
 	}
-
-	rc = smb1360_check_batt_profile(chip);
-	if (rc)
-		pr_err("Unable to modify battery profile\n");
 
 	/*
 	 * set chg en by cmd register, set chg en by writing bit 1,
@@ -3617,6 +3699,16 @@ static int smb1360_hw_init(struct smb1360_chip *chip)
 		return rc;
 	}
 
+	/* configure otg uvlo threshold  */
+	rc = smb1360_masked_write(chip, OTG_UVLO_REG,
+				OTG_UVLO_THR_MASK,
+				OTG_UVLO_THR << OTG_UVLO_THR_SHIFT);
+	if (rc < 0) {
+		dev_err(chip->dev, "Couldn't set otg uvlo threshold = %d\n",
+									rc);
+		return rc;
+	}
+
 	/* interrupt enabling - active low */
 	if (chip->client->irq) {
 		mask = CHG_STAT_IRQ_ONLY_BIT
@@ -3747,6 +3839,13 @@ static int smb_parse_batt_id(struct smb1360_chip *chip)
 						&chip->profile_rid[1]);
 	if (rc < 0) {
 		pr_err("Couldn't read profile-b-rid-kohm rc=%d\n", rc);
+		return rc;
+	}
+
+	rc = of_property_read_u32(node, "qcom,profile-c-rid-kohm",
+						&chip->profile_rid[2]);
+	if (rc < 0) {
+		pr_err("Couldn't read profile-c-rid-kohm rc=%d\n", rc);
 		return rc;
 	}
 
@@ -3894,6 +3993,9 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 	}
 
 	chip->rsense_10mohm = of_property_read_bool(node, "qcom,rsense-10mhom");
+
+	chip->otp_rslow_config = of_property_read_bool(node,
+						"qcom,otp-rslow-cfg");
 
 	if (of_property_read_bool(node, "qcom,batt-profile-select")) {
 		rc = smb_parse_batt_id(chip);
@@ -4173,7 +4275,8 @@ static int smb1360_probe(struct i2c_client *client,
 	/* STAT irq configuration */
 	if (client->irq) {
 		rc = devm_request_threaded_irq(&client->dev, client->irq, NULL,
-				smb1360_stat_handler, IRQF_ONESHOT,
+				smb1360_stat_handler,
+				IRQF_TRIGGER_RISING | IRQF_ONESHOT,
 				"smb1360_stat_irq", chip);
 		if (rc < 0) {
 			dev_err(&client->dev,
