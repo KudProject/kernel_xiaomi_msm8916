@@ -71,6 +71,22 @@ static const struct backlight_ops lm3533_bl_ops = {
 	.update_status	= lm3533_bl_update_status,
 };
 
+static int lm3533_bl_set_linear(struct lm3533_bl *bl, u8 linear)
+{
+	u8 mask;
+	u8 val;
+
+	mask = 1 << (2 * lm3533_bl_get_ctrlbank_id(bl) + 1);
+
+	if (linear)
+		val = mask;
+	else
+		val = 0;
+
+	return lm3533_update(bl->lm3533, LM3533_REG_CTRLBANK_AB_BCONF, val,
+									mask);
+}
+
 static ssize_t show_id(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
@@ -166,22 +182,12 @@ static ssize_t store_linear(struct device *dev,
 {
 	struct lm3533_bl *bl = dev_get_drvdata(dev);
 	unsigned long linear;
-	u8 mask;
-	u8 val;
 	int ret;
 
 	if (kstrtoul(buf, 0, &linear))
 		return -EINVAL;
 
-	mask = 1 << (2 * lm3533_bl_get_ctrlbank_id(bl) + 1);
-
-	if (linear)
-		val = mask;
-	else
-		val = 0;
-
-	ret = lm3533_update(bl->lm3533, LM3533_REG_CTRLBANK_AB_BCONF, val,
-									mask);
+	ret = lm3533_bl_set_linear(bl, linear);
 	if (ret)
 		return ret;
 

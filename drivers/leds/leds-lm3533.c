@@ -327,6 +327,23 @@ static int lm3533_led_blink_set(struct led_classdev *cdev,
 	return lm3533_led_pattern_enable(led, 1);
 }
 
+static int lm3533_led_linear_set(struct lm3533_led *led, u8 linear)
+{
+	u8 reg;
+	u8 mask;
+	u8 val;
+
+	reg = lm3533_led_get_lv_reg(led, LM3533_REG_CTRLBANK_BCONF_BASE);
+	mask = LM3533_REG_CTRLBANK_BCONF_MAPPING_MASK;
+
+	if (linear)
+		val = mask;
+	else
+		val = 0;
+
+	return lm3533_update(led->lm3533, reg, val, mask);
+}
+
 static ssize_t show_id(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
@@ -547,23 +564,12 @@ static ssize_t store_linear(struct device *dev,
 	struct led_classdev *led_cdev = dev_get_drvdata(dev);
 	struct lm3533_led *led = to_lm3533_led(led_cdev);
 	unsigned long linear;
-	u8 reg;
-	u8 mask;
-	u8 val;
 	int ret;
 
 	if (kstrtoul(buf, 0, &linear))
 		return -EINVAL;
 
-	reg = lm3533_led_get_lv_reg(led, LM3533_REG_CTRLBANK_BCONF_BASE);
-	mask = LM3533_REG_CTRLBANK_BCONF_MAPPING_MASK;
-
-	if (linear)
-		val = mask;
-	else
-		val = 0;
-
-	ret = lm3533_update(led->lm3533, reg, val, mask);
+	ret = lm3533_led_linear_set(led, linear);
 	if (ret)
 		return ret;
 
