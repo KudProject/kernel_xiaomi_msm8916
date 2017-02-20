@@ -627,7 +627,8 @@ static int fb_notifier_callback(struct notifier_block *self,
 		blank = evdata->data;
 		if (*blank == FB_BLANK_UNBLANK || *blank == FB_BLANK_NORMAL
                  || *blank == FB_BLANK_VSYNC_SUSPEND || *blank == FB_BLANK_HSYNC_SUSPEND )
-		   schedule_work(&ft5x06_data->fb_notify_work);
+		   queue_work(system_power_efficient_wq,
+				&ft5x06_data->fb_notify_work);
 		 else if (*blank == FB_BLANK_POWERDOWN) {
 			flush_work(&ft5x06_data->fb_notify_work);
 			ft5x06_ts_suspend(&ft5x06_data->client->dev);
