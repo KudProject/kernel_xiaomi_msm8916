@@ -21,6 +21,10 @@
 #include <linux/leds.h>
 #include <linux/qpnp/pwm.h>
 #include <linux/err.h>
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+#include <linux/backlight.h>
+#include <linux/mfd/lm3533.h>
+#endif
 
 #include "mdss_dsi.h"
 
@@ -590,6 +594,14 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 				mdss_dsi_panel_bklt_dcs(sctrl, bl_level);
 		}
 		break;
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+	case BL_SIC:
+		if (lm3533_bl_bd != NULL) {
+			lm3533_bl_bd->props.brightness = bl_level;
+			backlight_update_status(lm3533_bl_bd);
+		}
+		break;
+#endif
 	default:
 		pr_err("%s: Unknown bl_ctrl configuration\n",
 			__func__);
@@ -1627,6 +1639,10 @@ static int mdss_panel_parse_dt(struct device_node *np,
 			ctrl_pdata->bklt_ctrl = BL_DCS_CMD;
 			pr_debug("%s: Configured DCS_CMD bklt ctrl\n",
 								__func__);
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+		} else if (!strncmp(data, "bl_ctrl_sic", 11)) {
+			ctrl_pdata->bklt_ctrl = BL_SIC;
+#endif
 		}
 	}
 	rc = of_property_read_u32(np, "qcom,mdss-brightness-max-level", &tmp);

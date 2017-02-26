@@ -22,6 +22,9 @@
 #include <linux/seq_file.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+#include <linux/of_gpio.h>
+#endif
 
 #include <linux/mfd/lm3533.h>
 
@@ -236,7 +239,14 @@ static void lm3533_enable(struct lm3533 *lm3533)
 static void lm3533_disable(struct lm3533 *lm3533)
 {
 	if (gpio_is_valid(lm3533->gpio_hwen))
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+	{
+#endif
 		gpio_set_value(lm3533->gpio_hwen, 0);
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+		gpio_free(lm3533->gpio_hwen);
+	}
+#endif
 }
 
 enum lm3533_attribute_type {
@@ -479,12 +489,163 @@ static int lm3533_device_setup(struct lm3533 *lm3533,
 	return 0;
 }
 
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+static int lm3533_parse_dt(struct device *dev,
+			struct lm3533_platform_data *pdata)
+{
+	struct device_node *np = dev->of_node;
+	struct device_node *sub_np;
+	const char *str_name;
+	int rc, i, j;
+	u32 temp;
+
+	pdata->gpio_hwen = of_get_named_gpio_flags(np, "lm3533,hwen-gpio", 0, &temp);
+	if (pdata->gpio_hwen < 0) {
+		dev_err(dev, "can't read gpio-hwen\n");
+		return pdata->gpio_hwen;
+	}
+
+	rc = of_property_read_u32(np, "lm3533,boost_freq", &pdata->boost_freq);
+	if (rc) {
+		dev_err(dev, "can't read boost-freq\n");
+		pdata->boost_freq = LM3533_BOOST_FREQ_500KHZ;
+	}
+
+	rc = of_property_read_u32(np, "lm3533,boost_ovp", &pdata->boost_ovp);
+	if (rc) {
+		dev_err(dev, "can't read boost-ovp\n");
+		pdata->boost_ovp = LM3533_BOOST_OVP_40V;
+	}
+
+	rc = of_property_read_u32(np, "lm3533,num_backlights", &pdata->num_backlights);
+	if (rc) {
+		dev_err(dev, "can't read num_backlights\n");
+		pdata->num_backlights = 2;
+	}
+
+	rc = of_property_read_u32(np, "lm3533,num_leds", &pdata->num_leds);
+	if (rc) {
+		dev_err(dev, "can't read num-leds\n");
+		pdata->num_leds = 3;
+	}
+
+	pdata->backlights = devm_kzalloc(dev,
+				sizeof(struct lm3533_bl_platform_data) * pdata->num_backlights,
+				GFP_KERNEL);
+	if (!pdata->backlights) {
+			dev_err(dev, "Failed to allocate memory!\n");
+			return -ENOMEM;
+	}
+
+	pdata->leds= devm_kzalloc(dev,
+				sizeof(struct lm3533_led_platform_data) * pdata->num_leds,
+				GFP_KERNEL);
+	if (!pdata->leds) {
+			dev_err(dev, "Failed to allocate memory!\n");
+			return -ENOMEM;
+	}
+
+	i = j = 0;
+	for_each_child_of_node(np, sub_np) {
+		rc = of_property_read_string(sub_np, "lm3533,name",&str_name);
+		if (rc && (rc != -EINVAL)) {
+			dev_err(dev, "can't read name\n");
+			continue;
+		}
+
+		if (strncmp(str_name,"lm3533-backlight",16)==0) {
+			// lm3533-backlight settings
+			pdata->backlights[i].name = (char *) str_name;
+
+			rc = of_property_read_u16(sub_np, "lm3533,bl-max-current",
+					&pdata->backlights[i].max_current);
+			if (rc) {
+				dev_err(dev, "can't read bl-max-current\n");
+				pdata->backlights[i].max_current = 19400;
+			}
+
+			rc = of_property_read_u8(sub_np, "lm3533,bl-def-brightness",
+					&pdata->backlights[i].default_brightness);
+			if (rc) {
+				dev_err(dev, "can't read bl-def-brightness\n");
+				pdata->backlights[i].default_brightness = 30;
+			}
+
+			rc = of_property_read_u8(sub_np, "lm3533,bl-pwm",
+					&pdata->backlights[i].pwm);
+			if (rc) {
+				dev_err(dev, "can't read lm3533,bl-pwm\n");
+				pdata->backlights[i].pwm = 0x3f;
+			}
+
+			rc = of_property_read_u8(sub_np, "lm3533,bl-linear",
+					&pdata->backlights[i].linear);
+			if (rc) {
+				dev_err(dev, "can't read lm3533,bl-linear\n");
+				pdata->backlights[i].linear = 0x00;
+			}
+
+			i++;
+		} else {
+			// lm3533-led setting
+			pdata->leds[j].name = (char *) str_name;
+
+			dev_err(dev, "reading prop: %s\n", str_name);
+
+			rc = of_property_read_u16(sub_np, "lm3533,led-max-current",
+					&pdata->leds[j].max_current);
+			if (rc) {
+				dev_err(dev, "can't read led-max-current\n");
+				pdata->leds[j].max_current = 5000;
+			}
+
+			rc = of_property_read_u8(sub_np, "lm3533,led-pwm",
+					&pdata->leds[j].pwm);
+			if (rc) {
+				dev_err(dev, "can't read led-pwm\n");
+				pdata->leds[j].pwm = 0x38;
+			}
+
+			rc = of_property_read_u8(sub_np, "lm3533,led-linear",
+					&pdata->leds[j].linear);
+			if (rc) {
+				dev_err(dev, "can't read led-linear\n");
+				pdata->leds[j].linear = 0x00;
+			}
+
+			j++;
+		}
+	}
+
+	return 0;
+}
+#endif
+
 static int lm3533_device_init(struct lm3533 *lm3533)
 {
+#ifndef CONFIG_MACH_XIAOMI_FERRARI
 	struct lm3533_platform_data *pdata = lm3533->dev->platform_data;
+#else
+	struct lm3533_platform_data *pdata;
+#endif
 	int ret;
 
 	dev_dbg(lm3533->dev, "%s\n", __func__);
+
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+	if (lm3533->dev->of_node) {
+		pdata = lm3533->dev->platform_data = devm_kzalloc(lm3533->dev,
+				sizeof(struct lm3533_platform_data), GFP_KERNEL);
+		if (!pdata) {
+			dev_err(lm3533->dev, "Failed to allocate memory!\n");
+			return -ENOMEM;
+		}
+
+		ret = lm3533_parse_dt(lm3533->dev, pdata);
+		if (ret)
+			return -EINVAL;
+	}
+#endif
 
 	if (!pdata) {
 		dev_err(lm3533->dev, "no platform data\n");
@@ -496,14 +657,23 @@ static int lm3533_device_init(struct lm3533 *lm3533)
 	dev_set_drvdata(lm3533->dev, lm3533);
 
 	if (gpio_is_valid(lm3533->gpio_hwen)) {
+#ifndef CONFIG_MACH_XIAOMI_FERRARI
 		ret = devm_gpio_request_one(lm3533->dev, lm3533->gpio_hwen,
 					GPIOF_OUT_INIT_LOW, "lm3533-hwen");
+#else
+		// TODO: switch to devm_gpio
+		ret = gpio_request(lm3533->gpio_hwen, "lm3533-hwen");
+#endif
 		if (ret < 0) {
 			dev_err(lm3533->dev,
 				"failed to request HWEN GPIO %d\n",
 				lm3533->gpio_hwen);
 			return ret;
 		}
+
+#ifndef CONFIG_MACH_XIAOMI_FERRARI
+		gpio_direction_output(lm3533->gpio_hwen, 1);
+#endif
 	}
 
 	lm3533_enable(lm3533);
@@ -600,6 +770,14 @@ static int lm3533_i2c_probe(struct i2c_client *i2c,
 
 	dev_dbg(&i2c->dev, "%s\n", __func__);
 
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+	if (!i2c_check_functionality(i2c->adapter,
+				I2C_FUNC_SMBUS_I2C_BLOCK)) {
+		dev_err(&i2c->dev, "incompatible i2c adapter.");
+		return -ENODEV;
+	}
+#endif
+
 	lm3533 = devm_kzalloc(&i2c->dev, sizeof(*lm3533), GFP_KERNEL);
 	if (!lm3533)
 		return -ENOMEM;
@@ -631,6 +809,14 @@ static int lm3533_i2c_remove(struct i2c_client *i2c)
 	return 0;
 }
 
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+static struct of_device_id lm3533_match_table[] = {
+		{ .compatible = "ti,lm3533", },
+		{},
+};
+MODULE_DEVICE_TABLE(of, lm3533_match_table);
+#endif
+
 static const struct i2c_device_id lm3533_i2c_ids[] = {
 	{ "lm3533", 0 },
 	{ },
@@ -641,6 +827,9 @@ static struct i2c_driver lm3533_i2c_driver = {
 	.driver = {
 		   .name = "lm3533",
 		   .owner = THIS_MODULE,
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+		   .of_match_table = lm3533_match_table,
+#endif
 	},
 	.id_table	= lm3533_i2c_ids,
 	.probe		= lm3533_i2c_probe,

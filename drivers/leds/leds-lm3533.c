@@ -661,6 +661,14 @@ static int lm3533_led_setup(struct lm3533_led *led,
 	if (ret)
 		return ret;
 
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+	if (pdata->linear) {
+		ret = lm3533_led_linear_set(led, pdata->linear);
+		if (ret)
+			return ret;
+	}
+#endif
+
 	return lm3533_ctrlbank_set_pwm(&led->cb, pdata->pwm);
 }
 

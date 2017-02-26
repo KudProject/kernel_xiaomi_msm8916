@@ -90,6 +90,9 @@ enum dsi_panel_bl_ctrl {
 	BL_PWM,
 	BL_WLED,
 	BL_DCS_CMD,
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+	BL_SIC,
+#endif
 	UNKNOWN_CTRL,
 };
 
