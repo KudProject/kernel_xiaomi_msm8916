@@ -1,0 +1,9 @@
+config MSMB_CAMERA_SENSOR_FLASH_LM3646
+	bool "LM3646 Flash sensor support"
+	depends on MSMB_CAMERA
+
+config MSMB_CAMERA_SENSOR_FLASH_LM3646_DUMMY
+	bool "LM3646 Dummy Driver"
+	depends on MSMB_CAMERA_SENSOR_FLASH_LM3646
+	---help---
+	  Allows control of LM3646 from userspace

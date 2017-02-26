@@ -264,3 +264,5 @@ config MSM_FD
 	 depends on MSMB_CAMERA
 	 ---help---
 	    Enables support for the MSM FD face detection engine.
+
+source "drivers/media/platform/msm/camera_ferrari_v2/sensor/flash/lm3646/Kconfig"
