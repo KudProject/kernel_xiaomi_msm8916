@@ -188,7 +188,8 @@ void ist30xx_enable_irq(struct ist30xx_data *data)
 void ist30xx_scheduled_reset(struct ist30xx_data *data)
 {
 	if (likely(data->initialized))
-		schedule_delayed_work(&data->work_reset_check, 0);
+		queue_delayed_work(system_power_efficient_wq,
+					&data->work_reset_check, 0);
 }
 
 static void ist30xx_request_reset(struct ist30xx_data *data)
@@ -1104,7 +1105,8 @@ static int fb_notifier_callback(struct notifier_block *self,
 		blank = evdata->data;
 		if (*blank == FB_BLANK_UNBLANK || *blank == FB_BLANK_NORMAL
 		 || *blank == FB_BLANK_VSYNC_SUSPEND || *blank == FB_BLANK_HSYNC_SUSPEND )
-		   schedule_work(&ist_data->fb_notify_work);
+		   queue_work(system_power_efficient_wq,
+				&ist_data->fb_notify_work);
 		 else if (*blank == FB_BLANK_POWERDOWN) {
 			flush_work(&ist_data->fb_notify_work);
 			ist30xx_suspend(&ist_data->client->dev);
@@ -1416,18 +1418,21 @@ void timer_handler(unsigned long timer_data)
 				/* Check calibration */
 				if ((status->calib_msg & CALIB_MSG_MASK) == CALIB_MSG_VALID) {
 					tsp_info("Calibration check OK!!\n");
-					schedule_delayed_work(&data->work_reset_check, 0);
+					queue_delayed_work(system_power_efficient_wq,
+								&data->work_reset_check, 0);
 					status->calib = 0;
 				} else if (timer_ms - event_ms >= 3000) {
 					/* over 3 second */
 					tsp_info("calibration timeout over 3sec\n");
-					schedule_delayed_work(&data->work_reset_check, 0);
+					queue_delayed_work(system_power_efficient_wq,
+								&data->work_reset_check, 0);
 					status->calib = 0;
 				}
 			} else if (likely(status->noise_mode)) {
 				/* 100ms after last interrupt */
 				if (timer_ms - event_ms > 100)
-					schedule_delayed_work(&data->work_noise_protect, 0);
+					queue_delayed_work(system_power_efficient_wq,
+								&data->work_noise_protect, 0);
 			}
 
 #if IST30XX_ALGORITHM_MODE
@@ -1435,7 +1440,8 @@ void timer_handler(unsigned long timer_data)
 					(ist30xx_algr_size > 0)) {
 				/* 100ms after last interrupt */
 				if (timer_ms - event_ms > 100)
-					schedule_delayed_work(&data->work_debug_algorithm, 0);
+					queue_delayed_work(system_power_efficient_wq,
+								&data->work_debug_algorithm, 0);
 			}
 #endif
 		}
@@ -1785,7 +1791,8 @@ static int ist30xx_probe(struct i2c_client *client,
 #if IST30XX_INTERNAL_BIN
 #if IST30XX_UPDATE_BY_WORKQUEUE
 	INIT_DELAYED_WORK(&data->work_fw_update, fw_update_func);
-	schedule_delayed_work(&data->work_fw_update, IST30XX_UPDATE_DELAY);
+	queue_delayed_work(system_power_efficient_wq,
+				&data->work_fw_update, IST30XX_UPDATE_DELAY);
 #else
 	if (data->product_id != 0) {
 		ret = ist30xx_auto_bin_update(data);
