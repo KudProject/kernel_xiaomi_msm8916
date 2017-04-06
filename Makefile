@@ -388,6 +388,9 @@ KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 
+# Needed to unbreak GCC 7.x and above
+KBUILD_CFLAGS   += $(call cc-option,-fno-store-merging,)
+
 # User supplied flags
 KCFLAGS := $(call cc-disable-warning,maybe-uninitialized,) \
 	   -Wno-cpp -Wno-unused-const-variable -Wno-memset-transposed-args
