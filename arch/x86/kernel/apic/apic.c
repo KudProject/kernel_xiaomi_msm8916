@@ -1270,7 +1270,7 @@ void __cpuinit setup_local_APIC(void)
 	unsigned int value, queued;
 	int i, j, acked = 0;
 	unsigned long long tsc = 0, ntsc;
-	long long max_loops = cpu_khz;
+	long long max_loops = cpu_khz ? cpu_khz : 1000000;
 
 	if (cpu_has_tsc)
 		rdtscll(tsc);
@@ -1367,7 +1367,7 @@ void __cpuinit setup_local_APIC(void)
 			break;
 		}
 		if (queued) {
-			if (cpu_has_tsc) {
+			if (cpu_has_tsc && cpu_khz) {
 				rdtscll(ntsc);
 				max_loops = (cpu_khz << 10) - (ntsc - tsc);
 			} else
@@ -1580,6 +1580,9 @@ void __init enable_IR_x2apic(void)
 	unsigned long flags;
 	int ret, x2apic_enabled = 0;
 	int hardware_init_ret;
+
+	if (skip_ioapic_setup)
+		return;
 
 	/* Make sure irq_remap_ops are initialized */
 	setup_irq_remapping_ops();

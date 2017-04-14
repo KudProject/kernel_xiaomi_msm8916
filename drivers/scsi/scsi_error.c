@@ -898,7 +898,6 @@ static int scsi_request_sense(struct scsi_cmnd *scmd)
  */
 void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
 {
-	scmd->device->host->host_failed--;
 	scmd->eh_eflags = 0;
 	list_move_tail(&scmd->eh_entry, done_q);
 }
@@ -1690,8 +1689,10 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
 	 * is no point trying to lock the door of an off-line device.
 	 */
 	shost_for_each_device(sdev, shost) {
-		if (scsi_device_online(sdev) && sdev->locked)
+		if (scsi_device_online(sdev) && sdev->was_reset && sdev->locked) {
 			scsi_eh_lock_door(sdev);
+			sdev->was_reset = 0;
+		}
 	}
 
 	/*
@@ -1890,6 +1891,9 @@ int scsi_error_handler(void *data)
 			shost->transportt->eh_strategy_handler(shost);
 		else
 			scsi_unjam_host(shost);
+
+		/* All scmds have been handled */
+		shost->host_failed = 0;
 
 		/*
 		 * Note - if the above fails completely, the action is to take

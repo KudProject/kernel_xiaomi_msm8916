@@ -1524,7 +1524,9 @@ int xhci_urb_dequeue(struct usb_hcd *hcd, struct urb *urb, int status)
 	if (temp == 0xffffffff || (xhci->xhc_state & XHCI_STATE_HALTED)) {
 		xhci_dbg(xhci, "HW died, freeing TD.\n");
 		urb_priv = urb->hcpriv;
-		for (i = urb_priv->td_cnt; i < urb_priv->length; i++) {
+		for (i = urb_priv->td_cnt;
+		     i < urb_priv->length && xhci->devs[urb->dev->slot_id];
+		     i++) {
 			td = urb_priv->td[i];
 			if (!list_empty(&td->td_list))
 				list_del_init(&td->td_list);
@@ -4454,13 +4456,21 @@ static int xhci_change_max_exit_latency(struct xhci_hcd *xhci,
 	int ret;
 
 	spin_lock_irqsave(&xhci->lock, flags);
-	if (max_exit_latency == xhci->devs[udev->slot_id]->current_mel) {
+
+	virt_dev = xhci->devs[udev->slot_id];
+
+	/*
+	 * virt_dev might not exists yet if xHC resumed from hibernate (S4) and
+	 * xHC was re-initialized. Exit latency will be set later after
+	 * hub_port_finish_reset() is done and xhci->devs[] are re-allocated
+	 */
+
+	if (!virt_dev || max_exit_latency == virt_dev->current_mel) {
 		spin_unlock_irqrestore(&xhci->lock, flags);
 		return 0;
 	}
 
 	/* Attempt to issue an Evaluate Context command to change the MEL. */
-	virt_dev = xhci->devs[udev->slot_id];
 	command = xhci->lpm_command;
 	xhci_slot_copy(xhci, command->in_ctx, virt_dev->out_ctx);
 	spin_unlock_irqrestore(&xhci->lock, flags);
@@ -4645,8 +4655,16 @@ int xhci_update_hub_device(struct usb_hcd *hcd, struct usb_device *hdev,
 	ctrl_ctx->add_flags |= cpu_to_le32(SLOT_FLAG);
 	slot_ctx = xhci_get_slot_ctx(xhci, config_cmd->in_ctx);
 	slot_ctx->dev_info |= cpu_to_le32(DEV_HUB);
+	/*
+	 * refer to section 6.2.2: MTT should be 0 for full speed hub,
+	 * but it may be already set to 1 when setup an xHCI virtual
+	 * device, so clear it anyway.
+	 */
 	if (tt->multi)
 		slot_ctx->dev_info |= cpu_to_le32(DEV_MTT);
+	else if (hdev->speed == USB_SPEED_FULL)
+		slot_ctx->dev_info &= cpu_to_le32(~DEV_MTT);
+
 	if (xhci->hci_version > 0x95) {
 		xhci_dbg(xhci, "xHCI version %x needs hub "
 				"TT think time and number of ports\n",
@@ -4807,6 +4825,9 @@ static int __init xhci_hcd_init(void)
 {
 	int retval;
 
+	if (usb_disabled())
+		return -ENODEV;
+
 	retval = xhci_register_pci();
 	if (retval < 0) {
 		printk(KERN_DEBUG "Problem registering PCI driver.");
@@ -4834,6 +4855,7 @@ static int __init xhci_hcd_init(void)
 	BUILD_BUG_ON(sizeof(struct xhci_intr_reg) != 8*32/8);
 	/* xhci_run_regs has eight fields and embeds 128 xhci_intr_regs */
 	BUILD_BUG_ON(sizeof(struct xhci_run_regs) != (8+8*128)*32/8);
+
 	return 0;
 unreg_pci:
 	xhci_unregister_pci();

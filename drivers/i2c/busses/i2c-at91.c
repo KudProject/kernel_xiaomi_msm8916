@@ -105,6 +105,7 @@ struct at91_twi_dev {
 	unsigned twi_cwgr_reg;
 	struct at91_twi_pdata *pdata;
 	bool use_dma;
+	bool recv_len_abort;
 	struct at91_twi_dma dma;
 };
 
@@ -213,7 +214,7 @@ static void at91_twi_write_data_dma_callback(void *data)
 	struct at91_twi_dev *dev = (struct at91_twi_dev *)data;
 
 	dma_unmap_single(dev->dev, sg_dma_address(&dev->dma.sg),
-			 dev->buf_len, DMA_MEM_TO_DEV);
+			 dev->buf_len, DMA_TO_DEVICE);
 
 	/*
 	 * When this callback is called, THR/TX FIFO is likely not to be empty
@@ -278,12 +279,24 @@ static void at91_twi_read_next_byte(struct at91_twi_dev *dev)
 	*dev->buf = at91_twi_read(dev, AT91_TWI_RHR) & 0xff;
 	--dev->buf_len;
 
+	/* return if aborting, we only needed to read RHR to clear RXRDY*/
+	if (dev->recv_len_abort)
+		return;
+
 	/* handle I2C_SMBUS_BLOCK_DATA */
 	if (unlikely(dev->msg->flags & I2C_M_RECV_LEN)) {
-		dev->msg->flags &= ~I2C_M_RECV_LEN;
-		dev->buf_len += *dev->buf;
-		dev->msg->len = dev->buf_len + 1;
-		dev_dbg(dev->dev, "received block length %d\n", dev->buf_len);
+		/* ensure length byte is a valid value */
+		if (*dev->buf <= I2C_SMBUS_BLOCK_MAX && *dev->buf > 0) {
+			dev->msg->flags &= ~I2C_M_RECV_LEN;
+			dev->buf_len += *dev->buf;
+			dev->msg->len = dev->buf_len + 1;
+			dev_dbg(dev->dev, "received block length %d\n",
+					 dev->buf_len);
+		} else {
+			/* abort and send the stop by reading one more byte */
+			dev->recv_len_abort = true;
+			dev->buf_len = 1;
+		}
 	}
 
 	/* send stop if second but last byte has been read */
@@ -300,7 +313,7 @@ static void at91_twi_read_data_dma_callback(void *data)
 	struct at91_twi_dev *dev = (struct at91_twi_dev *)data;
 
 	dma_unmap_single(dev->dev, sg_dma_address(&dev->dma.sg),
-			 dev->buf_len, DMA_DEV_TO_MEM);
+			 dev->buf_len, DMA_FROM_DEVICE);
 
 	/* The last two bytes have to be read without using dma */
 	dev->buf += dev->buf_len - 2;
@@ -358,18 +371,56 @@ static irqreturn_t atmel_twi_interrupt(int irq, void *dev_id)
 
 	if (!irqstatus)
 		return IRQ_NONE;
-	else if (irqstatus & AT91_TWI_RXRDY)
-		at91_twi_read_next_byte(dev);
-	else if (irqstatus & AT91_TWI_TXRDY)
-		at91_twi_write_next_byte(dev);
 
-	/* catch error flags */
-	dev->transfer_status |= status;
-
+	/*
+	 * When a NACK condition is detected, the I2C controller sets the NACK,
+	 * TXCOMP and TXRDY bits all together in the Status Register (SR).
+	 *
+	 * 1 - Handling NACK errors with CPU write transfer.
+	 *
+	 * In such case, we should not write the next byte into the Transmit
+	 * Holding Register (THR) otherwise the I2C controller would start a new
+	 * transfer and the I2C slave is likely to reply by another NACK.
+	 *
+	 * 2 - Handling NACK errors with DMA write transfer.
+	 *
+	 * By setting the TXRDY bit in the SR, the I2C controller also triggers
+	 * the DMA controller to write the next data into the THR. Then the
+	 * result depends on the hardware version of the I2C controller.
+	 *
+	 * 2a - Without support of the Alternative Command mode.
+	 *
+	 * This is the worst case: the DMA controller is triggered to write the
+	 * next data into the THR, hence starting a new transfer: the I2C slave
+	 * is likely to reply by another NACK.
+	 * Concurrently, this interrupt handler is likely to be called to manage
+	 * the first NACK before the I2C controller detects the second NACK and
+	 * sets once again the NACK bit into the SR.
+	 * When handling the first NACK, this interrupt handler disables the I2C
+	 * controller interruptions, especially the NACK interrupt.
+	 * Hence, the NACK bit is pending into the SR. This is why we should
+	 * read the SR to clear all pending interrupts at the beginning of
+	 * at91_do_twi_transfer() before actually starting a new transfer.
+	 *
+	 * 2b - With support of the Alternative Command mode.
+	 *
+	 * When a NACK condition is detected, the I2C controller also locks the
+	 * THR (and sets the LOCK bit in the SR): even though the DMA controller
+	 * is triggered by the TXRDY bit to write the next data into the THR,
+	 * this data actually won't go on the I2C bus hence a second NACK is not
+	 * generated.
+	 */
 	if (irqstatus & (AT91_TWI_TXCOMP | AT91_TWI_NACK)) {
 		at91_disable_twi_interrupts(dev);
 		complete(&dev->cmd_complete);
+	} else if (irqstatus & AT91_TWI_RXRDY) {
+		at91_twi_read_next_byte(dev);
+	} else if (irqstatus & AT91_TWI_TXRDY) {
+		at91_twi_write_next_byte(dev);
 	}
+
+	/* catch error flags */
+	dev->transfer_status |= status;
 
 	return IRQ_HANDLED;
 }
@@ -378,6 +429,7 @@ static int at91_do_twi_transfer(struct at91_twi_dev *dev)
 {
 	int ret;
 	bool has_unre_flag = dev->pdata->has_unre_flag;
+	unsigned sr;
 
 	/*
 	 * WARNING: the TXCOMP bit in the Status Register is NOT a clear on
@@ -413,13 +465,16 @@ static int at91_do_twi_transfer(struct at91_twi_dev *dev)
 	INIT_COMPLETION(dev->cmd_complete);
 	dev->transfer_status = 0;
 
+	/* Clear pending interrupts, such as NACK. */
+	sr = at91_twi_read(dev, AT91_TWI_SR);
+
 	if (!dev->buf_len) {
 		at91_twi_write(dev, AT91_TWI_CR, AT91_TWI_QUICK);
 		at91_twi_write(dev, AT91_TWI_IER, AT91_TWI_TXCOMP);
 	} else if (dev->msg->flags & I2C_M_RD) {
 		unsigned start_flags = AT91_TWI_START;
 
-		if (at91_twi_read(dev, AT91_TWI_SR) & AT91_TWI_RXRDY) {
+		if (sr & AT91_TWI_RXRDY) {
 			dev_err(dev->dev, "RXRDY still set!");
 			at91_twi_read(dev, AT91_TWI_RHR);
 		}
@@ -458,8 +513,8 @@ static int at91_do_twi_transfer(struct at91_twi_dev *dev)
 		}
 	}
 
-	ret = wait_for_completion_interruptible_timeout(&dev->cmd_complete,
-							dev->adapter.timeout);
+	ret = wait_for_completion_timeout(&dev->cmd_complete,
+					     dev->adapter.timeout);
 	if (ret == 0) {
 		dev_err(dev->dev, "controller timed out\n");
 		at91_init_twi_bus(dev);
@@ -481,6 +536,12 @@ static int at91_do_twi_transfer(struct at91_twi_dev *dev)
 		ret = -EIO;
 		goto error;
 	}
+	if (dev->recv_len_abort) {
+		dev_err(dev->dev, "invalid smbus block length recvd\n");
+		ret = -EPROTO;
+		goto error;
+	}
+
 	dev_dbg(dev->dev, "transfer complete\n");
 
 	return 0;
@@ -537,6 +598,7 @@ static int at91_twi_xfer(struct i2c_adapter *adap, struct i2c_msg *msg, int num)
 	dev->buf_len = m_start->len;
 	dev->buf = m_start->buf;
 	dev->msg = m_start;
+	dev->recv_len_abort = false;
 
 	ret = at91_do_twi_transfer(dev);
 

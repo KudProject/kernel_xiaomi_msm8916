@@ -1231,9 +1231,12 @@ static int __sctp_connect(struct sock* sk,
 
 	timeo = sock_sndtimeo(sk, f_flags & O_NONBLOCK);
 
-	err = sctp_wait_for_connect(asoc, &timeo);
-	if ((err == 0 || err == -EINPROGRESS) && assoc_id)
+	if (assoc_id)
 		*assoc_id = asoc->assoc_id;
+	err = sctp_wait_for_connect(asoc, &timeo);
+	/* Note: the asoc may be freed after the return of
+	 * sctp_wait_for_connect.
+	 */
 
 	/* Don't free association on exit. */
 	asoc = NULL;
@@ -1533,8 +1536,7 @@ SCTP_STATIC void sctp_close(struct sock *sk, long timeout)
 			struct sctp_chunk *chunk;
 
 			chunk = sctp_make_abort_user(asoc, NULL, 0);
-			if (chunk)
-				sctp_primitive_ABORT(net, asoc, chunk);
+			sctp_primitive_ABORT(net, asoc, chunk);
 		} else
 			sctp_primitive_SHUTDOWN(net, asoc, NULL);
 	}
@@ -4260,7 +4262,7 @@ static int sctp_getsockopt_disable_fragments(struct sock *sk, int len,
 static int sctp_getsockopt_events(struct sock *sk, int len, char __user *optval,
 				  int __user *optlen)
 {
-	if (len <= 0)
+	if (len == 0)
 		return -EINVAL;
 	if (len > sizeof(struct sctp_event_subscribe))
 		len = sizeof(struct sctp_event_subscribe);
@@ -5777,6 +5779,9 @@ SCTP_STATIC int sctp_getsockopt(struct sock *sk, int level, int optname,
 	if (get_user(len, optlen))
 		return -EFAULT;
 
+	if (len < 0)
+		return -EINVAL;
+
 	sctp_lock_sock(sk);
 
 	switch (optname) {
@@ -6974,6 +6979,9 @@ void sctp_copy_sock(struct sock *newsk, struct sock *sk,
 	newinet->mc_ttl = 1;
 	newinet->mc_index = 0;
 	newinet->mc_list = NULL;
+
+	if (newsk->sk_flags & SK_FLAGS_TIMESTAMP)
+		net_enable_timestamp();
 }
 
 static inline void sctp_copy_descendant(struct sock *sk_to,
@@ -7154,6 +7162,13 @@ struct proto sctp_prot = {
 
 #if IS_ENABLED(CONFIG_IPV6)
 
+#include <net/transp_v6.h>
+static void sctp_v6_destroy_sock(struct sock *sk)
+{
+	sctp_destroy_sock(sk);
+	inet6_destroy_sock(sk);
+}
+
 struct proto sctpv6_prot = {
 	.name		= "SCTPv6",
 	.owner		= THIS_MODULE,
@@ -7163,7 +7178,7 @@ struct proto sctpv6_prot = {
 	.accept		= sctp_accept,
 	.ioctl		= sctp_ioctl,
 	.init		= sctp_init_sock,
-	.destroy	= sctp_destroy_sock,
+	.destroy	= sctp_v6_destroy_sock,
 	.shutdown	= sctp_shutdown,
 	.setsockopt	= sctp_setsockopt,
 	.getsockopt	= sctp_getsockopt,

@@ -1,3 +1,4 @@
+
 /*
  * Support PCI/PCIe on PowerNV platforms
  *
@@ -47,9 +48,8 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
 {
 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
 	struct pnv_phb *phb = hose->private_data;
-	struct pci_dn *pdn = pci_get_pdn(pdev);
 
-	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
+	if (pdev->no_64bit_msi && !phb->msi32_support)
 		return -ENODEV;
 
 	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;
@@ -176,8 +176,8 @@ static void pnv_pci_dump_p7ioc_diag_data(struct pnv_phb *phb)
 	pr_info("  dma1ErrorLog1        = 0x%016llx\n", data->dma1ErrorLog1);
 
 	for (i = 0; i < OPAL_P7IOC_NUM_PEST_REGS; i++) {
-		if ((data->pestA[i] >> 63) == 0 &&
-		    (data->pestB[i] >> 63) == 0)
+		if ((be64_to_cpu(data->pestA[i]) >> 63) == 0 &&
+		    (be64_to_cpu(data->pestB[i]) >> 63) == 0)
 			continue;
 		pr_info("  PE[%3d] PESTA        = 0x%016llx\n", i, data->pestA[i]);
 		pr_info("          PESTB        = 0x%016llx\n", data->pestB[i]);

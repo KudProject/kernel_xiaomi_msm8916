@@ -1813,7 +1813,7 @@ void xhci_mem_cleanup(struct xhci_hcd *xhci)
 	}
 
 	num_ports = HCS_MAX_PORTS(xhci->hcs_params1);
-	for (i = 0; i < num_ports; i++) {
+	for (i = 0; i < num_ports && xhci->rh_bw; i++) {
 		struct xhci_interval_bw_table *bwt = &xhci->rh_bw[i].bw_table;
 		for (j = 0; j < XHCI_MAX_INTERVAL; j++) {
 			struct list_head *ep = &bwt->interval_bw[j].endpoints;
@@ -1878,6 +1878,11 @@ no_bw:
 	kfree(xhci->usb3_ports);
 	kfree(xhci->port_array);
 	kfree(xhci->rh_bw);
+
+	xhci->usb2_ports = NULL;
+	xhci->usb3_ports = NULL;
+	xhci->port_array = NULL;
+	xhci->rh_bw = NULL;
 
 	xhci->page_size = 0;
 	xhci->page_shift = 0;
