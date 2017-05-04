@@ -91,3 +91,9 @@ extra_certificates
 signing_key.priv
 signing_key.x509
 x509.genkey
+
+# Ignore flashable zips created by build script
+out/*
+
+# Ignore .extraversion as it's only for kernel building
+.extraversion
