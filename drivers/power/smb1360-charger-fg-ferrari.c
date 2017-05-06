@@ -774,6 +774,7 @@ static int read_revision(struct smb1360_chip *chip, u8 *revision)
 static int smb1360_float_voltage_set(struct smb1360_chip *chip, int vfloat_mv)
 {
 	u8 temp;
+	int rc;
 
 	if ((vfloat_mv < MIN_FLOAT_MV) || (vfloat_mv > MAX_FLOAT_MV)) {
 		dev_err(chip->dev, "bad float voltage mv =%d asked to set\n",
@@ -783,8 +784,17 @@ static int smb1360_float_voltage_set(struct smb1360_chip *chip, int vfloat_mv)
 
 	temp = (vfloat_mv - MIN_FLOAT_MV) / VFLOAT_STEP_MV;
 
-	return smb1360_masked_write(chip, BATT_CHG_FLT_VTG_REG,
+	rc = smb1360_masked_write(chip, BATT_CHG_FLT_VTG_REG,
 				VFLOAT_MASK, temp);
+
+	if (rc) {
+		dev_err(chip->dev, "Couldn't set float voltage rc = %d\n", rc);
+	} else {
+		power_supply_set_voltage_limit(chip->usb_psy,
+				vfloat_mv * 1000);
+	}
+
+	return rc;
 }
 
 #define MIN_RECHG_MV		50
