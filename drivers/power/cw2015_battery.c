@@ -517,17 +517,17 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
 			ret = cw_i2c_write(cw_bat->client, REG_MODE, &reset_val, 1);
 			if (ret < 0)
 				return ret;
-				reset_val = MODE_NORMAL;
-				msleep(10);
-				ret = cw_i2c_write(cw_bat->client, REG_MODE, &reset_val, 1);
-				if (ret < 0)
-					return ret;
-				dev_dbg(&cw_bat->client->dev, "report battery capacity error");
-				ret = cw_update_config_info(cw_bat);
-				if (ret)
-					return ret;
-				dev_dbg(&cw_bat->client->dev, "report battery capacity still 0 if in changing");
-				if_quickstart = 1;
+			reset_val = MODE_NORMAL;
+			msleep(10);
+			ret = cw_i2c_write(cw_bat->client, REG_MODE, &reset_val, 1);
+			if (ret < 0)
+				return ret;
+			dev_dbg(&cw_bat->client->dev, "report battery capacity error");
+			ret = cw_update_config_info(cw_bat);
+			if (ret)
+				return ret;
+			dev_dbg(&cw_bat->client->dev, "report battery capacity still 0 if in changing");
+			if_quickstart = 1;
 		}
 	} else if ((if_quickstart == 1) && (cw_bat->charger_mode == 0)) {
 		if_quickstart = 0;

@@ -1625,10 +1625,10 @@ static int ist30xx_probe(struct i2c_client *client,
 	} else
 		pdata = client->dev.platform_data;
 
-		if (!pdata) {
-			dev_err(&client->dev, "Invalid pdata\n");
-			return -EINVAL;
-		}
+	if (!pdata) {
+		dev_err(&client->dev, "Invalid pdata\n");
+		return -EINVAL;
+	}
 #endif
 
 
@@ -1788,13 +1788,13 @@ static int ist30xx_probe(struct i2c_client *client,
 	schedule_delayed_work(&data->work_fw_update, IST30XX_UPDATE_DELAY);
 #else
 	if (data->product_id != 0) {
-	ret = ist30xx_auto_bin_update(data);
-	if (unlikely(ret != 0))
-		goto err_irq;
-		dev_err(&client->dev, "Unable to update ret: %d\n", ret);
-	} else {
+		ret = ist30xx_auto_bin_update(data);
+		if (unlikely(ret != 0)) {
+			goto err_irq;
+			dev_err(&client->dev, "Unable to update ret: %d\n", ret);
+		}
+	} else
 		ist30xx_get_ver_info(data);
-	}
 #endif	/* IST30XX_UPDATE_BY_WORKQUEUE */
 #endif	/* IST30XX_INTERNAL_BIN */
 

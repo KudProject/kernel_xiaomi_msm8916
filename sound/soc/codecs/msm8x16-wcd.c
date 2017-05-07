@@ -1871,10 +1871,10 @@ static int msm8x16_wcd_codec_enable_on_demand_supply(
 		}
 		if (atomic_dec_return(&supply->ref) == 0)
 			ret = regulator_disable(supply->supply);
-			if (ret)
-				dev_err(codec->dev, "%s: Failed to disable %s\n",
-					__func__,
-					on_demand_supply_name[w->shift]);
+		if (ret)
+			dev_err(codec->dev, "%s: Failed to disable %s\n",
+				__func__,
+				on_demand_supply_name[w->shift]);
 		break;
 	default:
 		break;
@@ -3182,8 +3182,8 @@ static int msm8x16_wcd_codec_enable_spk_pa(struct snd_soc_dapm_widget *w,
 			MSM8X16_WCD_A_ANALOG_SPKR_DAC_CTL, 0x10, 0x10);
 		if (get_codec_version(msm8x16_wcd) < CAJON_2_0)
 			msm8x16_wcd_boost_mode_sequence(codec, SPK_PMD);
-			snd_soc_update_bits(codec, w->reg, 0x80, 0x00);
-			switch (msm8x16_wcd->boost_option) {
+		snd_soc_update_bits(codec, w->reg, 0x80, 0x00);
+		switch (msm8x16_wcd->boost_option) {
 			case BOOST_SWITCH:
 				if (msm8x16_wcd->spk_boost_set)
 					snd_soc_update_bits(codec,
