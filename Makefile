@@ -389,7 +389,8 @@ KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 
 # User supplied flags
-KCFLAGS := $(call cc-disable-warning,maybe-uninitialized,)
+KCFLAGS := $(call cc-disable-warning,maybe-uninitialized,) \
+	   -Wno-cpp -Wno-unused-const-variable -Wno-memset-transposed-args
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
