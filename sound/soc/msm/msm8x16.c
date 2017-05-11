@@ -807,13 +807,16 @@ static int lineout_status_put(struct snd_kcontrol *kcontrol,
 
 	switch (state) {
         case 0:
-		schedule_delayed_work(&lineout_amp_disable, msecs_to_jiffies(50));
+		queue_delayed_work(system_power_efficient_wq,
+					&lineout_amp_disable, msecs_to_jiffies(50));
 		break;
 	case 1:
-		schedule_delayed_work(&lineout_amp_enable, msecs_to_jiffies(50));
+		queue_delayed_work(system_power_efficient_wq,
+					&lineout_amp_enable, msecs_to_jiffies(50));
 		break;
 	case 2:
-		schedule_delayed_work(&lineout_amp_dualmode, msecs_to_jiffies(50));
+		queue_delayed_work(system_power_efficient_wq,
+					&lineout_amp_dualmode, msecs_to_jiffies(50));
 		break;
 	default:
 		pr_err("%s: Unexpected input value\n", __func__);
