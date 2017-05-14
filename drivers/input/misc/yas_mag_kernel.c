@@ -231,7 +231,8 @@ static int yas_enable(struct yas_state *st)
 				ns_to_ktime(0),
 				HRTIMER_MODE_REL);
 		} else {
-			schedule_delayed_work(&st->work, 0);
+			queue_delayed_work(system_power_efficient_wq,
+						&st->work, 0);
 		}
 #endif
 	}
@@ -615,7 +616,8 @@ static void yas_work_func(struct work_struct *work)
  st->delay[MAG_DATA_FLAG] = poll_delay * 1000000;
 
 	if (!st->use_hrtimer) {
-		schedule_delayed_work(&st->work, msecs_to_jiffies(poll_delay));
+		queue_delayed_work(system_power_efficient_wq,
+					&st->work, msecs_to_jiffies(poll_delay));
 	}
 
 #endif
@@ -636,7 +638,8 @@ static void yas_late_resume(struct early_suspend *h)
 	struct yas_state *st = container_of(h, struct yas_state, sus);
 	if (atomic_read(&st->enable)) {
 		st->mag.set_enable(1);
-		schedule_delayed_work(&st->work, 0);
+		queue_delayed_work(system_power_efficient_wq,
+					&st->work, 0);
 	}
 }
 #endif
@@ -1168,7 +1171,8 @@ static int yas_resume(struct device *dev)
 				ns_to_ktime(pdev_data->delay[MAG_DATA_FLAG]),
 				HRTIMER_MODE_REL);
 		} else {
-			schedule_delayed_work(&pdev_data->work, 0);
+			queue_delayed_work(system_power_efficient_wq,
+						&pdev_data->work, 0);
 		}
 
 	#endif
