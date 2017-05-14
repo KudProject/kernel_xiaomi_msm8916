@@ -515,7 +515,8 @@ static int ltr559_als_enable(struct i2c_client *client, int on)
 		ret |= ltr559_sensor_I2C_Read(client, LTR559_ALS_DATA_CH0_1);
 
 
-		schedule_delayed_work(&data->als_work, msecs_to_jiffies(data->platform_data->als_poll_interval));
+		queue_delayed_work(system_power_efficient_wq,
+					&data->als_work, msecs_to_jiffies(data->platform_data->als_poll_interval));
 
 	} else {
 		cancel_delayed_work_sync(&data->als_work);
@@ -755,7 +756,8 @@ static void ltr559_als_work_func(struct work_struct *work)
 		}
 	}
 
-	schedule_delayed_work(&data->als_work, msecs_to_jiffies(data->platform_data->als_poll_interval));
+	queue_delayed_work(system_power_efficient_wq,
+				&data->als_work, msecs_to_jiffies(data->platform_data->als_poll_interval));
 workout:
 	mutex_unlock(&data->op_lock);
 }
@@ -771,7 +773,8 @@ static irqreturn_t ltr559_irq_handler(int irq, void *arg)
 	if (NULL == data)
 		return IRQ_HANDLED;
 	disable_irq_nosync(data->irq);
-	schedule_delayed_work(&data->ps_work, 0);
+	queue_delayed_work(system_power_efficient_wq,
+				&data->ps_work, 0);
 	return IRQ_HANDLED;
 }
 
