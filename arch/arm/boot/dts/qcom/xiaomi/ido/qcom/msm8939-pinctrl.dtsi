@@ -1,0 +1,116 @@
+/* Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&tlmm_pinmux {
+	fpc_reset {
+		qcom,pins = <&gp 52>;
+		qcom,num-grp-pins = <1>;
+		qcom,pin-func = <0>;
+		label = "fpc_reset";
+		fpc_reset_reset: reset {
+			drive-strength = <2>;
+			bias-disable;
+			output-low;
+		};
+		fpc_reset_active: active {
+			drive-strength = <2>;
+			bias-disable;
+			output-high;
+		};
+	};
+
+	fpc_irq_active {
+		qcom,pins = <&gp 49>;
+		qcom,num-grp-pins = <1>;
+		qcom,pin-func = <0>;
+		label = "fpc_irq_active";
+		fpc_irq_active: active {
+			drive-strength = <2>;
+			bias-disable;
+			input-enable;
+		};
+	};
+
+	spi1_active_fpc {
+		qcom,pins = <&gp 0>, <&gp 1>, <&gp 2>, <&gp 3>;
+		qcom,num-grp-pins = <4>;
+		qcom,pin-func = <1>;
+		label = "spi1_active";
+		spi1_active_fpc: default {
+			drive-strength = <12>;
+			bias-disable;
+		};
+	};
+
+	spi1_sleep_fpc {
+		qcom,pins = <&gp 0>, <&gp 1>, <&gp 2>, <&gp 3>;
+		qcom,num-grp-pins = <4>;
+		qcom,pin-func = <0>;
+		label = "spi1_sleep";
+		spi1_sleep_fpc: sleep {
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+
+	goodix_reset {
+		qcom,num-grp-pins = <1>;
+		qcom,pins = <&gp 52>;
+		qcom,pin-func = <0>;
+		label = "goodix_reset";
+		goodix_reset_active: active {
+			drive-strength = <2>;
+			bias-disable;
+			output-high;
+		};
+		goodix_reset_reset: reset {
+			drive-strength = <2>;
+			bias-disable;
+			output-low;
+		};
+	};
+
+	goodix_irq {
+		qcom,pins = <&gp 49>;
+		qcom,num-grp-pins = <1>;
+		qcom,pin-func = <0>;
+		label = "goodix_irq";
+		goodix_irq_active: active {
+			drive-strength = <2>;
+			bias-pull-down;
+			input-enable;
+		};
+	};
+
+	sdhc2_cd_pin {
+		cd_on {
+			drive-strength = <16>;
+		};
+	};
+
+	smb_int_pin {
+		label = "smb_int_gpio";
+	};
+
+	gpio_led_pins {
+		qcom,pins = <&gp 9>;
+		qcom,num-grp-pins = <1>;
+		label = "gpio-led-pins";
+		gpio_led_off: led_off {
+			drive-strength = <2>;
+			bias-disable;
+			output-low;
+		};
+	};
+
+};
+
