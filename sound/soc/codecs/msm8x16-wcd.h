@@ -36,8 +36,10 @@
 #define MSM8X16_TOMBAK_LPASS_DIGCODEC_CBCR			0x0181C0B0
 #define MSM8X16_TOMBAK_LPASS_DIGCODEC_AHB_CBCR			0x0181C0B4
 
+#ifdef CONFIG_MACH_XIAOMI_IDO
 #define EXT_SPK_AMP_GPIO	(902+121)
 #define EXT_SPK_AMP_HEADSET_GPIO	(902+8)
+#endif /* CONFIG_MACH_XIAOMI_IDO */
 
 #define MSM8X16_CODEC_NAME "msm8x16_wcd_codec"
 
@@ -314,7 +316,9 @@ extern int msm8x16_wcd_hs_detect(struct snd_soc_codec *codec,
 
 extern void msm8x16_wcd_hs_detect_exit(struct snd_soc_codec *codec);
 
+#ifdef CONFIG_MACH_XIAOMI_IDO
 extern int msm8x16_wcd_restart_mbhc(struct snd_soc_codec *codec);
+#endif /* CONFIG_MACH_XIAOMI_IDO */
 
 extern void msm8x16_wcd_spk_ext_pa_cb(
 		int (*codec_spk_ext_pa)(struct snd_soc_codec *codec,
