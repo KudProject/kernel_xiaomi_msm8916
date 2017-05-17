@@ -23,7 +23,23 @@ menu "Xiaomi board selection"
 
 	config MACH_XIAOMI_FERRARI
 		bool "XIAOMI_FERRARI board"
+		select BACKLIGHT_LCD_SUPPORT
+		select BACKLIGHT_LM3533
+		select CM36686
+		select HAPTIC_ISA1000
+		select IIO
+		select IIO_ST_HUB_DRIVERS
+		select IIO_ST_HUB_RAM_LOADER
+		select IMMERSION_HAPTIC
+		select LEDS_LM3533
+		select LEDS_TRIGGER_TIMER
 		select MACH_XIAOMI_MSM8916
+		select MFD_LM3533
+		select MSM_PRESERVE_MEM
+		select MSMB_CAMERA_SENSOR_FLASH_LM3646
+		select MSMB_CAMERA_SENSOR_FLASH_LM3646_DUMMY
+		select TOUCHSCREEN_ATMEL_336T
+		select XIAOMI_FERRARI_CAMERA
 		help
 		  Support for Xiaomi Mi 4i variant
 
