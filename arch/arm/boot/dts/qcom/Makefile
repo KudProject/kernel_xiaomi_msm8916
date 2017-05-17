@@ -80,6 +80,8 @@ dtb-$(CONFIG_ARCH_MSM8909) += msm8909-sim.dtb \
 
 ifeq ($(CONFIG_MACH_XIAOMI_IDO),y)
 dtb-$(CONFIG_ARCH_MSM8916) += msm8939-qrd-wt88509_64.dtb
+else ifeq ($(CONFIG_MACH_XIAOMI_FERRARI),y)
+dtb-$(CONFIG_ARCH_MSM8916) += msm8939-mtp-smb1360-ferrari.dtb
 else
 dtb-$(CONFIG_ARCH_MSM8916) += msm8916-cdp.dtb \
 	msm8916-cdp-smb1360.dtb \
