@@ -1,0 +1,138 @@
+/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&tlmm_pinmux {
+	x6db0_int_pin {
+		/* Gyroscope and accelerometer sensor combo */
+		qcom,pins = <&gp 115>;
+		qcom,pin-func = <0>;
+		qcom,num-grp-pins = <1>;
+		label = "x6db0-irq";
+		x6db0_int_default: x6db0_int_default {
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		x6db0_int_sleep: x6db0_int_sleep {
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+	};
+
+	x6db0_reset_pin {
+		/* Gyroscope and accelerometer sensor combo */
+		qcom,pins = <&gp 20>;
+		qcom,pin-func = <0>;
+		qcom,num-grp-pins = <1>;
+		label = "x6db0-reset";
+		x6db0_reset_default: x6db0_reset_default {
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		x6db0_reset_sleep: x6db0_reset_sleep {
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+	};
+
+	x6db0_wakeup_pin {
+		/* Gyroscope and accelerometer sensor combo */
+		qcom,pins = <&gp 102>;
+		qcom,pin-func = <0>;
+		qcom,num-grp-pins = <1>;
+		label = "x6db0-wakeup";
+		x6db0_wakeup_default: x6db0_wakeup_default {
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		x6db0_wakeup_sleep: x6db0_wakeup_sleep {
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+	};
+
+	cm36686_int_pin {
+		qcom,pins = <&gp 113>;
+		qcom,pin-func = <0>;
+		qcom,num-grp-pins = <1>;
+		label = "cm36686-irq";
+		cm36686_int_default: cm36686_int_default {
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		cm36686_int_sleep: cm36686_int_sleep {
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+	};
+};
+
+&soc {
+	gpio_keys {
+		hall_key0 {
+			label = "lid_back";
+			gpios = <&msm_gpio 0xb 0x1>;
+			linux,input-type = <0x5>;
+			linux,code = <0x0>;
+			gpio-key,wakeup;
+			debounce-interval = <0xf>;
+		};
+
+		hall_key1 {
+			label = "lid_front";
+			gpios = <&msm_gpio 0x24 0x1>;
+			linux,input-type = <0x5>;
+			linux,code = <0x13>;
+			gpio-key,wakeup;
+			debounce-interval = <0xf>;
+		};
+	};
+
+	i2c_6: i2c@78ba000 { /* BLSP1 QUP6 */
+		nfc-nci@e {
+			status = "disabled";
+		};
+
+		nq@2b {
+			status = "disabled";
+		};
+	};
+
+	i2c@78b6000 { /* BLSP1 QUP2 */
+		cm36686@60 {
+			als_trans_ratio = <0x10>;
+			compatible = "cm,cm36686";
+			interrupt-parent = <&msm_gpio>;
+			interrupts = <0x71 0x2008>;
+			pinctrl-0 = <&cm36686_int_default>;
+			pinctrl-names = "default";
+			prox_default_offset = <0x3e8>;
+			prox_thres_far = <0xc8>;
+			prox_thres_near = <0x12c>;
+			reg = <0x60>;
+		};
+
+		x6db0@08 {
+			compatible = "st,lsm6db0";
+			interrupt-parent = <&msm_gpio>;
+			interrupts = <0x73 0x2004>;
+			reg = <0x8>;
+			st,reset-gpio = <&msm_gpio 0x14 0x0>;
+			st,wakeup-gpio = <&msm_gpio 0x66 0x0>;
+			vdd-supply = <&pm8916_l6>;
+			vmag-supply = <&pm8916_l17>;
+		};
+
+		/delete-node/ akm@c;
+		/delete-node/ avago@39;
+		/delete-node/ mpu6050@68;
+	};
+};

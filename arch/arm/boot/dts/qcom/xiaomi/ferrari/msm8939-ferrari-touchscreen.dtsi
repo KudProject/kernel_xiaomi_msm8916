@@ -1,0 +1,157 @@
+/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&tlmm_pinmux {
+	pmx_ts_pwr_active {
+		qcom,pins = <&gp 9>, <&gp 78>;
+		qcom,pin-func = <0x0>;
+		qcom,num-grp-pins = <0x2>;
+		label = "pmx_ts_pwr_active";
+
+		ts_pwr_active: ts_pwr_active {
+			drive-strength = <0x10>;
+			bias-pull-up;
+			linux,phandle = <0xc1>;
+			phandle = <0xc1>;
+		};
+	};
+
+	pmx_ts_pwr_suspend {
+		qcom,pins = <&gp 9>, <&gp 78>;
+		qcom,pin-func = <0x0>;
+		qcom,num-grp-pins = <0x2>;
+		label = "pmx_ts_pwr_suspend";
+
+		ts_pwr_suspend: ts_pwr_suspend {
+			drive-strength = <0x2>;
+			bias-disable;
+			linux,phandle = <0xc2>;
+			phandle = <0xc2>;
+		};
+	};
+};
+
+&soc {
+	i2c_5: i2c@78b9000 { /* BLSP1 QUP5 */
+		atmel_mxt_ts_336t@4a {
+			atmel,config-array-size = <0x4>;
+			atmel,default-config = <0x1>;
+			atmel,gpio-mask = <0xc>;
+			atmel,irq-gpio = <&msm_gpio 0xd 0x2008>;
+			atmel,irqflags = <0x2008>;
+			atmel,mxt-fw-name = "xiaomi/ferrari/mXT336T21AA.fw";
+			atmel,power-ldo-gpio = <&msm_gpio 0x9 0x0>;
+			atmel,power-ts-gpio = <&msm_gpio 0x4e 0x0>;
+			atmel,reset-gpio = <&msm_gpio 0xc 0x0>;
+			compatible = "atmel,mxt-ts-336t";
+			interrupt-parent = <&msm_gpio>;
+			interrupts = <0xd 0x2008>;
+			pinctrl-0 = <&ts_int_active &ts_reset_active &ts_pwr_active>;
+			pinctrl-1 = <&ts_int_suspend &ts_reset_suspend &ts_pwr_suspend>;
+			pinctrl-names = "pmx_ts_active", "pmx_ts_suspend";
+			reg = <0x4a>;
+			vdd-supply = <&pm8916_l6>;
+
+			atmel,cfg_1 {
+				atmel,atchthr-sensitive = <0x6>;
+				atmel,build = <0xaa>;
+				atmel,family-id = <0xa4>;
+				atmel,key-codes = <0x66 0x8b 0x9e>;
+				atmel,key-num = <0x3>;
+				atmel,mult-intthr-not-sensitive = <0x11>;
+				atmel,mult-intthr-sensitive = <0xc>;
+				atmel,mult-tchthr-not-sensitive = <0x0>;
+				atmel,mult-tchthr-sensitive = <0x0>;
+				atmel,mxt-cfg-name = "xiaomi/ferrari/mxt_336t_wintek_config.fw";
+				atmel,panel-id = <0x33>;
+				atmel,rev-id = <0x2>;
+				atmel,self-chgtime-max = <0x0>;
+				atmel,self-chgtime-min = <0x0>;
+				atmel,selfintthr-stylus = <0x0>;
+				atmel,t71-tchthr-pos = <0x16>;
+				atmel,variant-id = <0x15>;
+				atmel,vendor-id = <0xc>;
+				atmel,version = <0x20>;
+				atmel,wake-up-self-adcx = <0x0>;
+			};
+
+			atmel,cfg_2 {
+				atmel,atchthr-sensitive = <0x6>;
+				atmel,build = <0xaa>;
+				atmel,family-id = <0xa4>;
+				atmel,key-codes = <0x66 0x8b 0x9e 0x74>;
+				atmel,key-num = <0x4>;
+				atmel,mult-intthr-not-sensitive = <0x11>;
+				atmel,mult-intthr-sensitive = <0xc>;
+				atmel,mult-tchthr-not-sensitive = <0x0>;
+				atmel,mult-tchthr-sensitive = <0x0>;
+				atmel,mxt-cfg-name = "xiaomi/ferrari/mxt_336t_biel_config.fw";
+				atmel,panel-id = <0x31>;
+				atmel,rev-id = <0x2>;
+				atmel,self-chgtime-max = <0x0>;
+				atmel,self-chgtime-min = <0x0>;
+				atmel,selfintthr-stylus = <0x0>;
+				atmel,t71-tchthr-pos = <0x16>;
+				atmel,variant-id = <0x15>;
+				atmel,vendor-id = <0xc>;
+				atmel,version = <0x21>;
+				atmel,wake-up-self-adcx = <0x10>;
+			};
+
+			atmel,cfg_3 {
+				atmel,atchthr-sensitive = <0x6>;
+				atmel,build = <0xaa>;
+				atmel,family-id = <0xa4>;
+				atmel,key-codes = <0x66 0x8b 0x9e 0x74>;
+				atmel,key-num = <0x4>;
+				atmel,mult-intthr-not-sensitive = <0x11>;
+				atmel,mult-intthr-sensitive = <0xc>;
+				atmel,mult-tchthr-not-sensitive = <0x0>;
+				atmel,mult-tchthr-sensitive = <0x0>;
+				atmel,mxt-cfg-name = "xiaomi/ferrari/mxt_336t_biel_config.fw";
+				atmel,panel-id = <0x35>;
+				atmel,rev-id = <0x2>;
+				atmel,self-chgtime-max = <0x0>;
+				atmel,self-chgtime-min = <0x0>;
+				atmel,selfintthr-stylus = <0x0>;
+				atmel,t71-tchthr-pos = <0x16>;
+				atmel,variant-id = <0x15>;
+				atmel,vendor-id = <0xc>;
+				atmel,version = <0x21>;
+				atmel,wake-up-self-adcx = <0x10>;
+			};
+
+			atmel,cfg_4 {
+				atmel,atchthr-sensitive = <0x6>;
+				atmel,build = <0xaa>;
+				atmel,family-id = <0xa4>;
+				atmel,key-codes = <0x66 0x8b 0x9e 0x74>;
+				atmel,key-num = <0x4>;
+				atmel,mult-intthr-not-sensitive = <0x11>;
+				atmel,mult-intthr-sensitive = <0xc>;
+				atmel,mult-tchthr-not-sensitive = <0x0>;
+				atmel,mult-tchthr-sensitive = <0x0>;
+				atmel,mxt-cfg-name = "xiaomi/ferrari/mxt_336t_tpk_config.fw";
+				atmel,panel-id = <0x36>;
+				atmel,rev-id = <0x2>;
+				atmel,self-chgtime-max = <0x0>;
+				atmel,self-chgtime-min = <0x0>;
+				atmel,selfintthr-stylus = <0x0>;
+				atmel,t71-tchthr-pos = <0x16>;
+				atmel,variant-id = <0x15>;
+				atmel,vendor-id = <0xc>;
+				atmel,version = <0x21>;
+				atmel,wake-up-self-adcx = <0x10>;
+			};
+		};
+	};
+};
