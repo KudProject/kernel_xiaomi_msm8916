@@ -72,6 +72,9 @@
 #include <linux/power_supply.h>
 #endif
 
+#ifdef CONFIG_WAKE_GESTURES
+#include <linux/wake_gestures.h>
+#endif
 
 #define FT_VTG_MIN_UV	   2600000
 #define FT_VTG_MAX_UV	   3300000
@@ -92,6 +95,13 @@ int fhd_key_dim_x[] = {0, FHD_MENU_KEY_X, FHD_HOME_KEY_X, FHD_BACK_KEY_X,};
 
 struct ist30xx_data *ts_data;
 struct ist30xx_data *global_ts_data;
+
+#ifdef CONFIG_WAKE_GESTURES
+struct ist30xx_data *ist30xx_ts;
+bool scr_suspended(void) {
+	return ist30xx_ts->suspended;
+}
+#endif
 
 #if CTP_CHARGER_DETECT
 extern int power_supply_get_battery_charge_state(struct power_supply *psy);
@@ -745,6 +755,10 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
 		else
 			key_press = false;
 
+/*#ifdef CONFIG_WAKE_GESTURES
+		if (data->suspended);
+		fingers[idx].bit_field.x+=5000;
+#endif*/
 
 		if ((finger_press == false) && (key_press == false)) {
 			input_mt_slot(data->input_dev, id);
@@ -985,8 +999,8 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 
 irq_err:
 	tsp_err("intr msg: 0x%08x, ret: %d\n", msg[0], ret);
-#if IST30XX_GESTURE
-	if (!data->suspend)
+#if IST30XX_GESTURE || defined(CONFIG_WAKE_GESTURES)
+	if (!data->suspended)
 #endif
 		ist30xx_request_reset(data);
 irq_end:
@@ -1008,14 +1022,43 @@ static int ist30xx_suspend(struct device *dev)
 
 	struct ist30xx_data *data = dev_get_drvdata(dev);
 
+#ifdef CONFIG_WAKE_GESTURES
+	int err;
+#endif
+
 	del_timer(&event_timer);
+#ifndef CONFIG_WAKE_GESTURES
 	cancel_delayed_work_sync(&data->work_noise_protect);
 	cancel_delayed_work_sync(&data->work_reset_check);
 	cancel_delayed_work_sync(&data->work_debug_algorithm);
+#endif
 	mutex_lock(&ist30xx_mutex);
+#ifdef CONFIG_WAKE_GESTURES
+	if (s2w_switch || dt2w_switch) {
+		ist30xx_enable_irq(data);
+		ist30xx_start(data);
+	} else
+	{
+		ist30xx_disable_irq(data);
+		ist30xx_internal_suspend(data);
+		clear_input_data(data);
+	}
+#endif
+#ifndef CONFIG_WAKE_GESTURES
 	ist30xx_disable_irq(data);
 	ist30xx_internal_suspend(data);
 	clear_input_data(data);
+#endif
+
+#ifdef CONFIG_WAKE_GESTURES
+	tsp_info("Entering suspend state");
+	if (device_may_wakeup(dev) && (s2w_switch || dt2w_switch)) {
+		err = enable_irq_wake(data->client->irq);
+		if (err)
+			tsp_info("%s: set_irq_wake failed\n", __func__);
+		return err;
+	}
+#endif
 #if IST30XX_GESTURE
 	if (data->gesture) {
 		data->status.noise_mode = false;
@@ -1031,12 +1074,42 @@ static int ist30xx_suspend(struct device *dev)
 static int ist30xx_resume(struct device *dev)
 {
 
+#ifdef CONFIG_WAKE_GESTURES
+	int i, err;
+#endif
 
 	 struct ist30xx_data *data = dev_get_drvdata(dev);
 
 	data->noise_mode |= (1 << NOISE_MODE_POWER);
 
 	mutex_lock(&ist30xx_mutex);
+#ifdef CONFIG_WAKE_GESTURES
+	tsp_info("Entering resume state");
+	if (device_may_wakeup(dev) && (s2w_switch || dt2w_switch)) {
+
+		for (i = 0; i < IST30XX_MAX_MT_FINGERS; i++) {
+			input_mt_slot(data->input_dev, i);
+			input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, 0);
+		}
+		input_mt_report_pointer_emulation(data->input_dev, false);
+		input_sync(data->input_dev);
+
+		err = disable_irq_wake(data->client->irq);
+		if (err)
+			tsp_info("%s: disable_irq_wake failed\n",__func__);
+
+		if (dt2w_switch_changed) {
+			dt2w_switch = dt2w_switch_temp;
+			dt2w_switch_changed = false;
+		}
+		if (s2w_switch_changed) {
+			s2w_switch = s2w_switch_temp;
+			s2w_switch_changed = false;
+		}
+
+		return err;
+	}
+#endif
 	ist30xx_internal_resume(data);
 
 	#if CTP_CHARGER_DETECT
@@ -1273,8 +1346,8 @@ static void reset_work_func(struct work_struct *work)
 				(data->status.update != 1) && (data->status.calib != 1))) {
 		mutex_lock(&ist30xx_mutex);
 		ist30xx_disable_irq(data);
-#if IST30XX_GESTURE
-		if (data->suspend)
+#if IST30XX_GESTURE || defined(CONFIG_WAKE_GESTURES)
+		if (data->suspended)
 			ist30xx_internal_suspend(data);
 		else
 #endif
@@ -1283,6 +1356,10 @@ static void reset_work_func(struct work_struct *work)
 #if IST30XX_GESTURE
 		if (data->gesture && data->suspend)
 			data->status.noise_mode = false;
+#endif
+#ifdef CONFIG_WAKE_GESTURES
+		if ((s2w_switch || dt2w_switch) && data->suspended)
+		data->status.noise_mode = false;
 #endif
 		ist30xx_start(data);
 		ist30xx_enable_irq(data);
@@ -1691,6 +1768,12 @@ static int ist30xx_probe(struct i2c_client *client,
 		dev_err(&client->dev, "==========\n");
 	}
 
+#ifdef CONFIG_WAKE_GESTURES
+	ist30xx_ts = data;
+//	device_init_wakeup(&client->dev, 1);
+	tsp_info("IST30XX WG Module init done");
+#endif
+
 /*
 	ret = ist30xx_init_system(data);
 	if (unlikely(ret)) {
@@ -1819,6 +1902,9 @@ static int ist30xx_probe(struct i2c_client *client,
 	data->suspend = false;
 	data->gesture = false;
 #endif
+/*#ifdef CONFIG_WAKE_GESTURES
+	data->suspended = false;
+#endif*/
 		 data->ignore_delay = false;
 	data->secure_mode = false;
 	data->irq_working = false;

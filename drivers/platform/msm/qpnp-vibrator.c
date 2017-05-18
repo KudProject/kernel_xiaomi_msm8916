@@ -69,6 +69,10 @@ struct qpnp_vib {
 	spinlock_t lock;
 };
 
+#ifdef CONFIG_WAKE_GESTURES
+struct qpnp_vib *vib_dev;
+#endif
+
 static int qpnp_vib_read_u8(struct qpnp_vib *vib, u8 *data, u16 reg)
 {
 	int rc;
@@ -297,6 +301,14 @@ retry:
 	spin_unlock_irqrestore(&vib->lock, flags);
 }
 
+#ifdef CONFIG_WAKE_GESTURES
+void set_vibrate(int value)
+{
+	qpnp_vib_enable(&(vib_dev->timed_dev),value);
+}
+EXPORT_SYMBOL(set_vibrate);
+#endif
+
 static int qpnp_vib_get_time(struct timed_output_dev *dev)
 {
 	struct qpnp_vib *vib = container_of(dev, struct qpnp_vib,
@@ -491,6 +503,10 @@ static int qpnp_vibrator_probe(struct spmi_device *spmi)
 	rc = timed_output_dev_register(&vib->timed_dev);
 	if (rc < 0)
 		return rc;
+
+#ifdef CONFIG_WAKE_GESTURES
+	vib_dev=vib;
+#endif
 
 	rc = device_create_file(vib->timed_dev.dev, &dev_attr_vtg_level);
 	if (rc < 0)
