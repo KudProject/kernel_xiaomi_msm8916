@@ -599,6 +599,9 @@ KBUILD_CFLAGS	+= $(call cc-option, -no-pie)
 KBUILD_AFLAGS	+= $(call cc-option, -fno-pie)
 KBUILD_CPPFLAGS += $(call cc-option, -fno-pie)
 
+# Kill format truncation warnings
+KBUILD_CFLAGS   += $(call cc-disable-warning,format-truncation,)
+
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os
 else
