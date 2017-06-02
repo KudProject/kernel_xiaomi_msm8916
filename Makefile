@@ -395,6 +395,13 @@ KBUILD_CFLAGS   += $(call cc-option,-fno-store-merging,)
 KCFLAGS := $(call cc-disable-warning,maybe-uninitialized,) \
 	   -Wno-cpp -Wno-unused-const-variable -Wno-memset-transposed-args
 
+# TEMP: Bypass all GCC 7.x warnings
+# Not having much time to take a look for now
+KCFLAGS += -Wno-format-truncation -Wno-format-overflow \
+	   -Wno-duplicate-decl-specifier -Wno-memset-elt-size \
+	   -Wno-switch-unreachable -Wno-int-in-bool-context \
+	   -Wno-array-bounds -Wno-bool-operation
+
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
 KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
