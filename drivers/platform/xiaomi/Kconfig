@@ -17,7 +17,25 @@ menu "Xiaomi board selection"
 
 	config MACH_XIAOMI_IDO
 		bool "XIAOMI_IDO board"
+		select BATTERY_CW2015
+		select BUILD_ARM64_APPENDED_DTB_IMAGE
+		select FINGERPRINT
+		select FINGERPRINT_FPC1020
+		select INPUT_KXTJ9
+		select INPUT_LTR559
+		select LEDS_AW2013
+		select LEDS_TRIGGER_BACKLIGHT
 		select MACH_XIAOMI_MSM8916
+		select MSM_PRESERVE_MEM
+		select QPNP_VM_BMS
+		select SENSORS_AKM09911
+		select SENSORS_BMA2X2
+		select SENSORS_MPU6050
+		select SENSORS_STK3X1X
+		select SENSORS_YAS537
+		select SMB358_CHARGER
+		select TOUCHSCREEN_FT5X06
+		select TOUCHSCREEN_IST30XX
 		help
 		  Support for Xiaomi Redmi 3/Pro variant
 
