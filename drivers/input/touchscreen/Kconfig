@@ -487,19 +487,6 @@ config TOUCHSCREEN_EDT_FT5X06
 	  To compile this driver as a module, choose M here: the
 	  module will be called edt-ft5x06.
 
-config TOUCHSCREEN_GSL1688E
-	tristate "SLIEAD GSL1688E I2C Touchscreen support"
-	depends on I2C
-	help
-	  Say Y here if you have an EDT "Polytouch" touchscreen based
-	  on the SLIEAD GSL1688E family of controllers connected to
-	  your system.
-
-	  If unsure, say N.
-
-	  To compile this driver as a module, choose M here: the
-	  module will be called gsl1688e.
-
 config TOUCHSCREEN_MIGOR
 	tristate "Renesas MIGO-R touchscreen"
 	depends on SH_MIGOR && I2C
@@ -1061,16 +1048,6 @@ config TOUCHSCREEN_BU21150
 
 	  Say Y here if you have a Rohm bu21150 AFE connected to
 	  your system.
-
-	  If unsure, say N.
-
-config TOUCHSCREEN_H2X
-	tristate "FT6436 H2X touchscreen"
-	help
-	  This enables support for character device channel for
-	  passing to the input system a multi-touch coordinates.
-
-	  Say Y here if you want to enable the driver.
 
 	  If unsure, say N.
 
