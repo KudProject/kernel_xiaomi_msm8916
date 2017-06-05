@@ -3506,7 +3506,9 @@ err:
 	if (pdata->vaddr_gpio_mux_pcm_ctl)
 		iounmap(pdata->vaddr_gpio_mux_pcm_ctl);
 	devm_kfree(&pdev->dev, pdata);
+#ifndef CONFIG_MACH_XIAOMI_IDO
 err1:
+#endif
 	return ret;
 }
 
