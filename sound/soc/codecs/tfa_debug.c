@@ -115,7 +115,7 @@ int tfaRunBitfieldDump(unsigned char reg, unsigned short regval ) {
 	}
 	while (n--);
 
-	return !havename == 1; // name
+	return !(havename == 1); // name
 }
 
 
