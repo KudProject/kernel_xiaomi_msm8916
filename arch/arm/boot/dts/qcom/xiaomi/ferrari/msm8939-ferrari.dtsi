@@ -1,0 +1,112 @@
+/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include "msm8939-ferrari-mdss.dtsi"
+#include "msm8939-ferrari-vibrator.dtsi"
+#include "msm8939-ferrari-battery.dtsi"
+#include "msm8939-ferrari-rtc.dtsi"
+#include "msm8939-ferrari-audio.dtsi"
+#include "msm8939-ferrari-touchscreen.dtsi"
+#include "msm8939-ferrari-leds.dtsi"
+#include "msm8939-ferrari-sensors.dtsi"
+#include "msm8939-ferrari-ramoops.dtsi"
+#include "msm8939-camera-sensor-ferrari.dtsi"
+
+#include "dsi-panel-sharp-r69431-720p-video.dtsi"
+#include "dsi-panel-auo-r61318-720p-video.dtsi"
+#include "dsi-panel-sharp-nt35595-1080p-video-ram.dtsi"
+#include "dsi-panel-jdi-nt35595-1080p-video-ram.dtsi"
+#include "dsi-panel-jdi-rsp63311-1080p-video.dtsi"
+#include "dsi-panel-sharp-rsp61322-1080p-video.dtsi"
+#include "dsi-panel-auo-nt35596-1080p-video.dtsi"
+#include "dsi-panel-lgd-nt35596-1080p-video.dtsi"
+
+&soc {
+	android_usb: android_usb@086000c8 {
+		qcom,streaming-func = "mtp";
+	};
+
+	sdhc_1: sdhci@7824000 {
+		/delete-property/ cd-gpios;
+		interrupt-names = "hc_irq", "pwr_irq";
+		status = "ok";
+	};
+
+	sdhc_2: sdhci@7864000 {
+		/delete-property/ cd-gpios;
+
+		interrupt-names = "hc_irq", "pwr_irq";
+		interrupt-map = <0 &intc 0 125 0
+						1 &intc 0 221 0>;
+		status = "disabled";
+	};
+
+	qcom,rpm-log@29dc00 {
+		qcom,rpm-addr-phys = <0x200000>;
+	};
+
+	rpm_bus: qcom,rpm-smd {
+		rpm-regulator-ldoa6 {
+			regulator-l6 {
+				regulator-always-on;
+			};
+		};
+	};
+
+	usb_otg: usb@78d9000 {
+		qcom,hsusb-otg-phy-init-seq = <0x74 0x80 0x6E 0x81 0x32 0x82 0x13 0x83 0xffffffff>;
+	};
+
+	/* partial revert d53dbc04e4 ARM: dts: msm: Disable modem pil loading from
+	   mproc code */
+	qcom,ipc_router_modem_xprt {
+		/delete-property/ qcom,disable-pil-loading;
+	};
+
+	qcom,smem@86300000 {
+		qcom,smd-modem {
+			/delete-property/ qcom,not-loadable;
+		};
+	};
+};
+
+&tlmm_pinmux {
+	blsp1_uart1_active {
+		/delete-property/ qcom,pins;
+	};
+
+	blsp1_uart1_sleep {
+		/delete-property/ qcom,pins;
+	};
+
+	sdhc2_cd_pin {
+		/delete-property/ qcom,num-grp-pins;
+		/delete-property/ qcom,pins;
+	};
+
+	spi0_active {
+		/delete-property/ qcom,pins;
+	};
+
+	spi0_suspend {
+		/delete-property/ qcom,pins;
+	};
+
+	tlmm_gpio_key {
+		qcom,pins = <&gp 107>, <&gp 108>, <&gp 11>, <&gp 36>;
+		qcom,num-grp-pins = <0x4>;
+	};
+
+	tpiu_seta_1 {
+		/delete-property/ qcom,pins;
+	};
+};

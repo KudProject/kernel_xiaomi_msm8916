@@ -567,6 +567,13 @@ config HAPTIC_ISA1200
 	help
 	  The ISA1200 is a high performance enhanced haptic driver.
 
+config HAPTIC_ISA1000
+	tristate "ISA1000 haptic support"
+	depends on ANDROID_TIMED_OUTPUT
+	default n
+	help
+	  The ISA1000 is a high performance enhanced haptic driver.
+
 config QSEECOM
 	tristate "Qualcomm Secure Execution Communicator driver"
 	help

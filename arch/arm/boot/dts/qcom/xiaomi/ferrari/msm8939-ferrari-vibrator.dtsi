@@ -1,0 +1,63 @@
+/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&tlmm_pinmux {
+	vibrator_pin {
+		label = "vibrator-pin";
+		qcom,num-grp-pins = <0x2>;
+		qcom,pin-func = <0x0>;
+		qcom,pins = <&gp 120>, <&gp 121>;
+
+		vibrator_pin_enable: vibrator_pin_enable {
+			bias-disable = <0x0>;
+			drive-strength = <0x10>;
+		};
+
+		vibrator_pin_disable: vibrator_pin_disable {
+			bias-pull-down;
+			drive-strength = <0x2>;
+		};
+	};
+
+	vibrator_pwm {
+		label = "vibrator-pwm";
+		qcom,num-grp-pins = <0x1>;
+		qcom,pin-func = <0x1>;
+		qcom,pins = <&gp 97>;
+
+		vibrator_pwm_default: pwm_default {
+			bias-disable = <0x0>;
+			drive-strength = <0x2>;
+		};
+
+		vibrator_pwm_sleep: pwm_sleep {
+			bias-pull-down;
+			drive-strength = <0x2>;
+		};
+	};
+};
+
+&soc {
+	vibrator {
+		status = "ok";
+		compatible = "imagis,isa1000";
+		gpio-isa1000-en = <1023>;
+		gpio-haptic-en = <1022>;
+
+		clock-names = "vibrator_pwm";
+		clocks = <&clock_gcc clk_gcc_gp1_clk>;
+
+		pinctrl-0 = <&vibrator_pwm_default &vibrator_pin_enable>;
+		pinctrl-1 = <&vibrator_pwm_sleep &vibrator_pin_disable>;
+		pinctrl-names = "pwm_default", "pwm_sleep";
+	};
+};

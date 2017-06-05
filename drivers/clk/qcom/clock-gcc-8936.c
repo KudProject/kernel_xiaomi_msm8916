@@ -1279,6 +1279,11 @@ static struct rcg_clk cpp_clk_src = {
 
 static struct clk_freq_tbl ftbl_gcc_gp1_3_clk[] = {
 	F(  19200000,	      gcc_xo,   1,	  0,	0),
+#ifdef CONFIG_MACH_XIAOMI_FERRARI
+	F(  20000,	      gcc_xo,	8,	  1,	120 ),
+	F(  25000,	      gcc_xo,	8,	  1,	96 ),
+	F(  30000,	      gcc_xo,	8,	  1,	80 ),
+#endif
 	F_END
 };
 

@@ -1,0 +1,124 @@
+/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/ {
+	aliases {
+		i2c1 = &i2c_1;
+	};
+};
+
+&tlmm_pinmux {
+	pmx_i2c_1 {
+		qcom,pins = <&gp 2>, <&gp 3>;
+		qcom,num-grp-pins = <0x2>;
+		qcom,pin-func = <0x3>;
+		label = "pmx_i2c_1";
+
+		i2c_1_active: i2c_1_active {
+			drive-strength = <0x2>;
+			bias-disable;
+		};
+
+		i2c_1_sleep: i2c_1_sleep {
+			drive-strength = <0x2>;
+			bias-disable;
+		};
+	};
+};
+
+&soc {
+	i2c_1: i2c@78b5000 { /* BLSP1 QUP1 */
+		compatible = "qcom,i2c-msm-v2";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg-names = "qup_phys_addr", "bam_phys_addr";
+		reg = <0x78b5000 0x1000>,
+			<0x7884000 0x23000>;
+		interrupt-names = "qup_irq", "bam_irq";
+		interrupts = <0 95 0>, <0 238 0>;
+		qcom,clk-freq-out = <100000>;
+		qcom,clk-freq-in  = <19200000>;
+		clock-names = "iface_clk", "core_clk";
+		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
+			<&clock_gcc clk_gcc_blsp1_qup1_i2c_apps_clk>;
+
+		pinctrl-names = "i2c_active", "i2c_sleep";
+		pinctrl-0 = <&i2c_1_active>;
+		pinctrl-1 = <&i2c_1_sleep>;
+		qcom,noise-rjct-scl = <0>;
+		qcom,noise-rjct-sda = <0>;
+		qcom,bam-pipe-idx-cons = <4>;
+		qcom,bam-pipe-idx-prod = <5>;
+		qcom,master-id = <86>;
+	};
+};
+
+/* thewisenerd: prep i2c_1 for dma engine */
+/* reference commit: 23a93b073ec86 */
+&i2c_1 {
+	reg-names = "qup_phys_addr";
+	reg = <0x78b5000 0x1000>;
+	interrupt-names = "qup_irq";
+	interrupts = <0 95 0>;
+
+	/delete-property/ qcom,bam-pipe-idx-cons;
+	/delete-property/ qcom,bam-pipe-idx-prod;
+
+	dmas = <&dma_blsp1 4 64 0x20000020 0x20>,
+			<&dma_blsp1 5 32 0x20000020 0x20>;
+	dma-names = "tx", "rx";
+};
+
+&i2c_1 {
+	lm3533@38 {
+		compatible = "ti,lm3533";
+		reg = <0x38>;
+		lm3533,hwen-gpio = <&msm_gpio 0x62 0x0>;
+		lm3533,boost_ovp = <0x2>;
+		lm3533,boost_freq = <0x0>;
+		lm3533,num_backlights = <0x1>;
+		lm3533,num_leds = <0x4>;
+
+		lm3533,backlight_0 {
+			lm3533,name = "lm3533-backlight0";
+			lm3533,bl-max-current = /bits/ 16 <0x4ee8>;
+			lm3533,bl-def-brightness = /bits/ 8 <0x82>;
+			lm3533,bl-pwm = /bits/ 8 <0x1>;
+			lm3533,bl-linear = /bits/ 8 <0x1>;
+		};
+
+		lm3533,led_0 {
+			lm3533,name = "red";
+			lm3533,led-max-current = /bits/ 16 <0x1388>;
+			lm3533,led-pwm = /bits/ 8 <0x0>;
+		};
+
+		lm3533,led_1 {
+			lm3533,name = "blue";
+			lm3533,led-max-current = /bits/ 16 <0x1388>;
+			lm3533,led-pwm = /bits/ 8 <0x0>;
+		};
+
+		lm3533,led_2 {
+			lm3533,name = "green";
+			lm3533,led-max-current = /bits/ 16 <0x1388>;
+			lm3533,led-pwm = /bits/ 8 <0x0>;
+		};
+
+		lm3533,led_3 {
+			lm3533,name = "button-backlight";
+			lm3533,led-max-current = /bits/ 16 <0x1388>;
+			lm3533,led-pwm = /bits/ 8 <0x0>;
+			lm3533,led-linear = /bits/ 8 <0x1>;
+		};
+	};
+};

@@ -1,0 +1,78 @@
+/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&tlmm_pinmux {
+	ext-cdc-tlmm-lines {
+		qcom,pins = <&gp 112>, <&gp 117>, <&gp 118>, <&gp 119>;
+		qcom,num-grp-pins = <4>;
+	};
+
+	/delete-node/ cdc-ext-spk-pa;
+};
+
+&soc {
+	i2c_6: i2c@78ba000 { /* BLSP1 QUP6 */
+		tfa98xx@34 {
+			reg = <0x34>;
+			compatible = "nxp,tfa98xx";
+		};
+	};
+
+	sound-9306 {
+		qcom,msm-codec-type = "internal";
+		qcom,msm-ext-pa = "quaternary";
+
+		pinctrl-names = "cdc_slim_lines_act",
+			"cdc_slim_lines_sus",
+			"cross_conn_det_act",
+			"cross_conn_det_sus",
+			"cdc_lines_quat_ext_act",
+			"cdc_lines_quat_ext_sus";
+
+		pinctrl-0 = <&cdc_slim_lines_act>;
+		pinctrl-1 = <&cdc_slim_lines_sus>;
+		pinctrl-2 = <&cross_conn_det_act>;
+		pinctrl-3 = <&cross_conn_det_sus>;
+		pinctrl-4 = <&cdc_slim_lines_act &ext_cdc_tlmm_lines_act>;
+		pinctrl-5 = <&cdc_slim_lines_sus &ext_cdc_tlmm_lines_sus>;
+
+		qcom,audio-routing =
+			"RX_BIAS", "MCLK",
+			"LDO_H", "MCLK",
+			"AMIC1", "MIC BIAS1 External",
+			"MIC BIAS1 External", "Handset Mic",
+			"AMIC2", "MIC BIAS2 External",
+			"MIC BIAS2 External", "Headset Mic",
+			"AMIC3", "MIC BIAS1 External",
+			"MIC BIAS1 External", "Secondary Mic",
+			"AMIC4", "MIC BIAS1 External",
+			"MIC BIAS1 External", "Secondary Mic";
+
+		/delete-property/ qcom,cdc-us-euro-gpios;
+		/delete-property/ qcom,headset-jack-type-NC;
+	};
+
+	slim_msm: slim@77c0000 {
+		tapan_codec {
+			/delete-property/ cdc-vdd-spkdrv-supply;
+			/delete-property/ qcom,cdc-micbias2-ext-cap;
+			/delete-property/ qcom,cdc-on-demand-supplies;
+			/delete-property/ qcom,cdc-vdd-spkdrv-current;
+			/delete-property/ qcom,cdc-vdd-spkdrv-voltage;
+		};
+
+		/delete-node/ tomtom_codec;
+	};
+
+	/delete-node/ sound-9330;
+	/delete-node/ regulator_spk;
+};

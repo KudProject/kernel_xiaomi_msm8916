@@ -382,6 +382,9 @@ config SND_SOC_WCD9XXX
 	default y if SND_SOC_WCD9320=y || SND_SOC_WCD9306=y || SND_SOC_WCD9330=y
 	default y if SND_SOC_WCD9335=y
 
+config SND_SOC_TFA98XX
+	tristate "TFA98XX Speaker PA Driver"
+
 config SND_SOC_MSM8X10_WCD
 	tristate
 

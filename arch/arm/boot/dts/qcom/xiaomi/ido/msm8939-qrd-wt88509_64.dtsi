@@ -11,8 +11,15 @@
  * GNU General Public License for more details.
  */
 
-#include "msm8939-qrd.dtsi"
+#include "../../msm8939-qrd.dtsi"
 #include "msm8939-camera-sensor-qrd-88509.dtsi"
+
+#include "panels/dsi-panel-nt35596-1080p-skuk-video.dtsi"
+#include "panels/dsi-panel-r63350-tianma-1080p-video.dtsi"
+#include "panels/dsi-panel-nt35596-1080p-video.dtsi"
+#include "panels/dsi-panel-hx8394f-boe-720p-video.dtsi"
+#include "panels/dsi-panel-nt35521s-ebbg-720p-video.dtsi"
+#include "panels/dsi-panel-ili9881c-tianma-720p-video.dtsi"
 
 &soc {
 	i2c@78b9000 {/* BLSP1 QUP5 */
@@ -511,4 +518,4 @@
 
 };
 
-#include "cyanogenmod-xiaomi-ido.dtsi"
+#include "msm8939-ido-ramoops.dtsi"

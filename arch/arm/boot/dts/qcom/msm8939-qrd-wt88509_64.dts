@@ -14,15 +14,8 @@
 
 /dts-v1/;
 
-#include "msm8939-v3.0.dtsi"
-#include "msm8939-qrd-wt88509_64.dtsi"
-#include "dsi-panel-nt35596-1080p-skuk-video.dtsi"
-#include "dsi-panel-r63350-tianma-1080p-video.dtsi"
-#include "dsi-panel-nt35596-1080p-video.dtsi"
-#include "dsi-panel-hx8394f-boe-720p-video.dtsi"
-#include "dsi-panel-nt35521s-ebbg-720p-video.dtsi"
-#include "dsi-panel-ili9881c-tianma-720p-video.dtsi"
-
+#include "msm8939-v3.0-ido.dtsi"
+#include "xiaomi/ido/msm8939-qrd-wt88509_64.dtsi"
 
 / {
 	model = "Qualcomm Technologies, Inc. MSM8939v3.0 QRD SKUK";
@@ -271,10 +264,10 @@
 		qcom,rpull-up-kohm = <68>;
 		qcom,vref-batt-therm = <1800000>;
 
-		#include "batterydata-wingtech-desai_SAMSUNG-4v4-4000mah.dtsi"
-		#include "batterydata-wingtech-feimaotui_SONY-4v4-4000mah.dtsi"
-		#include "batterydata-wingtech-xingwangda_ATL-4v4-4000mah.dtsi"
-		#include "batterydata-wingtech-guangyu_Coslight-4v4-4000mah.dtsi"
+		#include "xiaomi/ido/batterydata/batterydata-wingtech-desai_SAMSUNG-4v4-4000mah.dtsi"
+		#include "xiaomi/ido/batterydata/batterydata-wingtech-feimaotui_SONY-4v4-4000mah.dtsi"
+		#include "xiaomi/ido/batterydata/batterydata-wingtech-xingwangda_ATL-4v4-4000mah.dtsi"
+		#include "xiaomi/ido/batterydata/batterydata-wingtech-guangyu_Coslight-4v4-4000mah.dtsi"
 	};
 };
 
@@ -307,3 +300,16 @@
 	qcom,init-voltage = <2600000>;
 	regulator-always-on;
 };
+
+#include "xiaomi/ido/qcom/msm8916-pinctrl.dtsi"
+#include "xiaomi/ido/qcom/msm8916-qrd.dtsi"
+
+#include "xiaomi/ido/qcom/msm8939-common.dtsi"
+#include "xiaomi/ido/qcom/msm8939.dtsi"
+#include "xiaomi/ido/qcom/msm8939-gpu.dtsi"
+#include "xiaomi/ido/qcom/msm8939-pinctrl.dtsi"
+#include "xiaomi/ido/qcom/msm8939-qrd.dtsi"
+#include "xiaomi/ido/qcom/msm8939-regulator.dtsi"
+#include "xiaomi/ido/qcom/msm8939-v3.0-gpu.dtsi"
+
+#include "xiaomi/ido/qcom/msm-pm8916.dtsi"
