@@ -63,7 +63,7 @@
 #define ST_HUB_PAYLOAD_16BYTE				(16)
 #define ST_HUB_PAYLOAD_17BYTE				(17)
 
-static const u8 lsm6db0_fw[] = {
+static u8 lsm6db0_fw[] = {
 #include "lsm6db0.fw"
 };
 
