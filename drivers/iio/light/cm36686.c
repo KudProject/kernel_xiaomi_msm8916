@@ -623,7 +623,7 @@ static ssize_t cm_show_sampling_frequency_available(struct device *dev,
     if (len > 0)
         buf[len - 1] = '\n';
 
-	return len;
+    return len;
 }
 static ssize_t cm_show_calibration_offset(struct device *dev,
 				struct device_attribute *attr, char *buf)
