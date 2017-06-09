@@ -1,2 +1,0 @@
-config FINGERPRINT_GOODIX_GF3208
-	tristate "Goodix GF3208 fingerprint driver support"
