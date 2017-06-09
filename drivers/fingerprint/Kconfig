@@ -5,7 +5,10 @@ config FINGERPRINT
 
 if FINGERPRINT
 
-source "drivers/fingerprint/fpc/Kconfig"
-source "drivers/fingerprint/goodix/Kconfig"
+config FINGERPRINT_FPC1020
+	tristate "FingerPrint Cards fingerprint driver support"
+
+config FINGERPRINT_GOODIX_GF3208
+	tristate "Goodix GF3208 fingerprint driver support"
 
 endif # FINGERPRINT

@@ -222,6 +222,7 @@ config ARCH_MSM
 	select MSM_BIMC_BWMON
 	select DEVFREQ_GOV_MSM_BW_HWMON
 	select DEVFREQ_SIMPLE_DEV
+	select CPU_FREQ_GOV_PERFORMANCE
 	help
 	  This enables support for the ARMv8 based Qualcomm chipsets.
 
@@ -443,7 +444,7 @@ config SWP_EMULATE
 
 config HZ
 	int
-	default 100
+	default 300
 
 config ARCH_HAS_HOLES_MEMORYMODEL
 	def_bool y if SPARSEMEM

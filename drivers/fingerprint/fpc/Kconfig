@@ -1,2 +1,0 @@
-config FINGERPRINT_FPC1020
-	tristate "FingerPrint Cards fingerprint driver support"
