@@ -1591,7 +1591,8 @@ static enum hrtimer_restart st_hub_hrtimer_fifo_function(struct hrtimer *timer)
 	now = hrtimer_cb_get_time(timer);
 	hrtimer_forward(timer, now, hdata->fifo_ktime);
 
-	schedule_work(&hdata->fifo_work_timer);
+	queue_work(system_power_efficient_wq,
+			&hdata->fifo_work_timer);
 
 	return HRTIMER_RESTART;
 }
@@ -2249,7 +2250,8 @@ int st_sensor_hub_common_resume(struct st_hub_data *hdata)
 	}
 
 	if (hdata->en_batch_sensor | hdata->en_wake_batch_sensor) {
-		schedule_work(&hdata->fifo_work_timer);
+		queue_work(system_power_efficient_wq,
+				&hdata->fifo_work_timer);
 		hrtimer_start(&hdata->fifo_timer,
 					hdata->fifo_ktime, HRTIMER_MODE_REL);
 		get_monotonic_boottime(&ts);
