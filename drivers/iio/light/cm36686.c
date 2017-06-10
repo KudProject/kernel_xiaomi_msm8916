@@ -843,7 +843,8 @@ static int psensor_enable(struct iio_dev *indio_dev, bool en, bool mode)
 	if (mode == CM36686_POLLING_MODE || data->prox_first_data)
 	{
 		if (en)
-			schedule_delayed_work(&data->prox_delayed_work, CM36686_PROX_DELAY * HZ / 1000);
+			queue_delayed_work(system_power_efficient_wq,
+						&data->prox_delayed_work, CM36686_PROX_DELAY * HZ / 1000);
 		else
 			cancel_delayed_work(&data->prox_delayed_work);
 	}
@@ -874,7 +875,8 @@ static int lsensor_enable(struct iio_dev *indio_dev, bool en, bool mode)
 
 	data->als_enabled = en;
 	if (en)
-		schedule_delayed_work(&data->als_delayed_work, CM36686_ALS_DELAY * HZ / 1000);
+		queue_delayed_work(system_power_efficient_wq,
+					&data->als_delayed_work, CM36686_ALS_DELAY * HZ / 1000);
 	else
 		cancel_delayed_work(&data->als_delayed_work);
 exit_err_state:
@@ -983,7 +985,8 @@ static void cm_prox_work(struct work_struct *work)
 
 exit_to_prx_schedule:
 	if (data->prox_continus)
-	    schedule_delayed_work(&data->prox_delayed_work, CM36686_PROX_DELAY * HZ / 1000);
+	    queue_delayed_work(system_power_efficient_wq,
+				&data->prox_delayed_work, CM36686_PROX_DELAY * HZ / 1000);
 	mutex_unlock(&data->mutex);
 }
 
@@ -1032,7 +1035,8 @@ static void cm_als_work(struct work_struct *work)
 				el_data.data1, el_data.timestamp);
 
 exit_to_als_schedule:
-	schedule_delayed_work(&data->als_delayed_work, CM36686_ALS_DELAY * HZ / 1000);
+	queue_delayed_work(system_power_efficient_wq,
+				&data->als_delayed_work, CM36686_ALS_DELAY * HZ / 1000);
 	mutex_unlock(&data->mutex);
 }
 
@@ -1436,14 +1440,16 @@ static int cm36686_resume(struct device *dev)
 	if (data->prox_enabled && data->prox_continus == CM36686_POLLING_MODE) {
 		pr_warning("cm36686_resume set prox_delayed_work\n");
 		psensor_enable(data->prox_idev, true, CM36686_POLLING_MODE);
-		schedule_delayed_work(&data->prox_delayed_work, CM36686_PROX_DELAY * HZ / 1000);
+		queue_delayed_work(system_power_efficient_wq,
+					&data->prox_delayed_work, CM36686_PROX_DELAY * HZ / 1000);
 	}
 
 	if (als_on_in_suspend) {
 		als_on_in_suspend = 0;
 		pr_warning("cm36686_resume set als_delayed_work\n");
 		lsensor_enable(data->als_idev, true, CM36686_POLLING_MODE);
-		schedule_delayed_work(&data->als_delayed_work, CM36686_ALS_DELAY * HZ / 1000);
+		queue_delayed_work(system_power_efficient_wq,
+					&data->als_delayed_work, CM36686_ALS_DELAY * HZ / 1000);
 	}
 	mutex_unlock(&data->mutex);
 
