@@ -4315,7 +4315,8 @@ static ssize_t mxt_hover_from_flash_store(struct device *dev,
 
 	error = strict_strtoul(buf, 0, &val);
 	if (!error && val == 0)
-		schedule_work(&data->self_tuning_work);
+		queue_work(system_power_efficient_wq,
+				&data->self_tuning_work);
 
 	return error ? : count;
 }
@@ -4482,7 +4483,8 @@ static int mxt_chip_reset(struct mxt_data *data)
 
 	error = mxt_initialize(data);
 
-	schedule_work(&data->hover_loading_work);
+	queue_work(system_power_efficient_wq,
+			&data->hover_loading_work);
 
 	return error;
 }
@@ -4577,7 +4579,8 @@ static int mxt_input_event(struct input_dev *dev,
 				ms->data = data;
 				ms->mode = (u8)value;
 				INIT_WORK(&ms->switch_mode_work, mxt_switch_mode_work);
-				schedule_work(&ms->switch_mode_work);
+				queue_work(system_power_efficient_wq,
+						&ms->switch_mode_work);
 			} else {
 				dev_err(&data->client->dev,
 					"Failed in allocating memory for mxt_mode_switch!\n");
@@ -4762,7 +4765,8 @@ static void mxt_start(struct mxt_data *data)
 		 * by disabling/re-enabling the noise suppression object */
 
 		/* Recalibrate since chip has been in deep sleep */
-		schedule_delayed_work(&data->calibration_delayed_work, msecs_to_jiffies(100));
+		queue_delayed_work(system_power_efficient_wq,
+					&data->calibration_delayed_work, msecs_to_jiffies(100));
 	}
 
 	dev_dbg(dev, "MXT started\n");
@@ -5676,7 +5680,8 @@ static int mxt_probe(struct i2c_client *client,
 	}
 
 	mxt_debugfs_init(data);
-	schedule_work(&data->hover_loading_work);
+	queue_work(system_power_efficient_wq,
+			&data->hover_loading_work);
 
 	return 0;
 
