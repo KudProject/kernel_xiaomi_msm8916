@@ -144,7 +144,8 @@ static void lm3533_led_set(struct led_classdev *cdev,
 	dev_dbg(led->cdev.dev, "%s - %d\n", __func__, value);
 
 	led->new_brightness = value;
-	schedule_work(&led->work);
+	queue_work(system_power_efficient_wq,
+			&led->work);
 }
 
 static enum led_brightness lm3533_led_get(struct led_classdev *cdev)
