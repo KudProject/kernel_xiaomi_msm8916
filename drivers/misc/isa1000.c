@@ -188,7 +188,8 @@ static void isa1000_enable(struct timed_output_dev *dev, int value)
 	}
 
 	mutex_unlock(&vib->lock);
-	schedule_work(&vib->work);
+	queue_work(system_power_efficient_wq,
+			&vib->work);
 }
 
 static void isa1000_update(struct work_struct *work)
@@ -214,7 +215,8 @@ static enum hrtimer_restart isa1000_timer_func(struct hrtimer *timer)
 	struct isa1000_vib *vib = container_of(timer, struct isa1000_vib, vib_timer);
 
 	vib->state = 0;
-	schedule_work(&vib->work);
+	queue_work(system_power_efficient_wq,
+			&vib->work);
 
 	return HRTIMER_NORESTART;
 }
