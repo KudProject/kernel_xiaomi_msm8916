@@ -1667,7 +1667,8 @@ static int hot_soft_handler(struct smb1360_chip *chip, u8 rt_stat)
 
 	if (chip->workaround_flags & WRKRND_HARD_JEITA) {
 		cancel_delayed_work_sync(&chip->jeita_work);
-		schedule_delayed_work(&chip->jeita_work,
+		queue_delayed_work(system_power_efficient_wq,
+					&chip->jeita_work,
 					msecs_to_jiffies(JEITA_WORK_MS));
 		pm_stay_awake(chip->dev);
 	}
@@ -1683,7 +1684,8 @@ static int cold_soft_handler(struct smb1360_chip *chip, u8 rt_stat)
 
 	if (chip->workaround_flags & WRKRND_HARD_JEITA) {
 		cancel_delayed_work_sync(&chip->jeita_work);
-		schedule_delayed_work(&chip->jeita_work,
+		queue_delayed_work(system_power_efficient_wq,
+					&chip->jeita_work,
 					msecs_to_jiffies(JEITA_WORK_MS));
 		pm_stay_awake(chip->dev);
 	}
@@ -3088,7 +3090,8 @@ static int determine_initial_status(struct smb1360_chip *chip)
 	UPDATE_IRQ_STAT(IRQ_A_REG, reg);
 
 	if (chip->workaround_flags & WRKRND_HARD_JEITA) {
-		schedule_delayed_work(&chip->jeita_work, 0);
+		queue_delayed_work(system_power_efficient_wq,
+					&chip->jeita_work, 0);
 	} else {
 		if (reg & IRQ_A_HOT_HARD_BIT)
 			chip->batt_hot = true;
