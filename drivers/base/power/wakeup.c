@@ -691,6 +691,7 @@ void __pm_wakeup_event(struct wakeup_source *ws, unsigned int msec)
 {
 	unsigned long flags;
 	unsigned long expires;
+	unsigned long max_active; // In Seconds
 
 	if (!ws)
 		return;
@@ -698,6 +699,11 @@ void __pm_wakeup_event(struct wakeup_source *ws, unsigned int msec)
 	spin_lock_irqsave(&ws->lock, flags);
 
 	wakeup_source_report_event(ws);
+
+	// Regulate Wake Time
+	max_active = 900;
+	if (ktime_to_ns(ws->total_time) > msecs_to_jiffies((max_active * 1000)) || ws->active_count > 8)
+		msec = (msec * 6) / 10;
 
 	if (!msec) {
 		wakeup_source_deactivate(ws);
