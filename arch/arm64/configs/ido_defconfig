@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 3.10.105 Kernel Configuration
+# Linux/arm64 3.10.106 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_64BIT=y
@@ -113,6 +113,7 @@ CONFIG_FAIR_GROUP_SCHED=y
 CONFIG_RT_GROUP_SCHED=y
 # CONFIG_BLK_CGROUP is not set
 CONFIG_SCHED_HMP=y
+CONFIG_SCHED_CORE_CTL=y
 # CONFIG_CHECKPOINT_RESTORE is not set
 CONFIG_NAMESPACES=y
 # CONFIG_UTS_NS is not set
@@ -1614,7 +1615,7 @@ CONFIG_UNIX98_PTYS=y
 # CONFIG_N_GSM is not set
 # CONFIG_TRACE_SINK is not set
 # CONFIG_DEVMEM is not set
-# CONFIG_DEVKMEM is not set
+CONFIG_DEVKMEM=y
 
 #
 # Serial drivers
@@ -3279,6 +3280,7 @@ CONFIG_QCOM_VOWIFI_11R=y
 CONFIG_QCOM_TDLS=y
 CONFIG_ENABLE_LINUX_REG=y
 CONFIG_WLAN_OFFLOAD_PACKETS=y
+# CONFIG_WLAN_FEATURE_RX_WAKELOCK is not set
 
 #
 # Qualcomm MSM specific device drivers
