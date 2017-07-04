@@ -11,6 +11,8 @@ obj-$(CONFIG_CPU_FREQ_GOV_ONDEMAND)	+= cpufreq_ondemand.o
 obj-$(CONFIG_CPU_FREQ_GOV_CONSERVATIVE)	+= cpufreq_conservative.o
 obj-$(CONFIG_CPU_FREQ_GOV_INTERACTIVE)	+= cpufreq_interactive.o
 obj-$(CONFIG_CPU_FREQ_GOV_NEBULA)	+= cpufreq_nebula.o
+obj-$(CONFIG_CPU_FREQ_GOV_CYAN)		+= cpufreq_cyan.o
+ccflags-$(CONFIG_CPU_FREQ_GOV_CYAN)	+= -Wno-int-conversion
 obj-$(CONFIG_CPU_FREQ_GOV_COMMON)		+= cpufreq_governor.o
 obj-$(CONFIG_CPU_BOOST)			+= cpu-boost.o
 
