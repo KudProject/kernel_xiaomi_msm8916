@@ -5857,16 +5857,17 @@ static int msm_otg_probe(struct platform_device *pdev)
 			 * for device mode In this case HUB should be gone
 			 * only once out of reset at the boot time and after
 			 * that always stay on*/
-			if (gpio_is_valid(motg->pdata->hub_reset_gpio))
+			if (gpio_is_valid(motg->pdata->hub_reset_gpio)) {
 				ret = devm_gpio_request(&pdev->dev,
 						motg->pdata->hub_reset_gpio,
 						"qcom,hub-reset-gpio");
-			if (ret < 0) {
-				dev_err(&pdev->dev, "gpio req failed for hub reset\n");
-				goto remove_phy;
+				if (ret < 0) {
+					dev_err(&pdev->dev, "gpio req failed for hub reset\n");
+					goto remove_phy;
+				}
+				gpio_direction_output(
+					motg->pdata->hub_reset_gpio, 1);
 			}
-			gpio_direction_output(
-				motg->pdata->hub_reset_gpio, 1);
 
 			if (gpio_is_valid(motg->pdata->switch_sel_gpio)) {
 				ret = devm_gpio_request(&pdev->dev,
