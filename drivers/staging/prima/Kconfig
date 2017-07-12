@@ -29,6 +29,10 @@ config PRIMA_WLAN_LFR
 	bool "Enable the Prima WLAN Legacy Fast Roaming feature"
 	default n
 
+config PRIMA_WLAN_LFR_MBB
+	bool "Enable the Prima WLAN Legacy Fast Roaming Make Before Break feature"
+	default n
+
 config PRIMA_WLAN_OKC
 	bool "Enable the Prima WLAN Opportunistic Key Caching feature"
 	default n
