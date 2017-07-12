@@ -110,6 +110,7 @@
 #define NUM_RADIOS  0x1
 #endif /* WLAN_FEATURE_LINK_LAYER_STATS */
 
+
 typedef struct {
    u8 element_id;
    u8 len;
@@ -172,6 +173,7 @@ enum qca_nl80211_vendor_subcmds {
 
     /* Get Concurrency Matrix */
     QCA_NL80211_VENDOR_SUBCMD_GET_CONCURRENCY_MATRIX = 42,
+    QCA_NL80211_VENDOR_SUBCMD_APFIND = 52,
     /* Start Wifi Logger */
     QCA_NL80211_VENDOR_SUBCMD_WIFI_LOGGER_START = 62,
 
@@ -179,12 +181,10 @@ enum qca_nl80211_vendor_subcmds {
     QCA_NL80211_VENDOR_SUBCMD_GET_WIFI_INFO = 61,
     /* Start Wifi Memory Dump */
     QCA_NL80211_VENDOR_SUBCMD_WIFI_LOGGER_MEMORY_DUMP = 63,
-
-    /*
-     * APIs corresponding to the sub commands 65-68 are deprecated.
-     * These sub commands are reserved and not supposed to be used
-     * for any other purpose
-     */
+    QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_SET_SSID_HOTLIST = 65,
+    QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_RESET_SSID_HOTLIST = 66,
+    QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_HOTLIST_SSID_FOUND = 67,
+    QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_HOTLIST_SSID_LOST = 68,
 
     /* Wi-Fi Configuration subcommands */
     QCA_NL80211_VENDOR_SUBCMD_SET_WIFI_CONFIGURATION = 74,
@@ -199,7 +199,6 @@ enum qca_nl80211_vendor_subcmds {
     QCA_NL80211_VENDOR_SUBCMD_LINK_PROPERTIES = 101,
 
     QCA_NL80211_VENDOR_SUBCMD_SETBAND = 105,
-
     /* Start / Stop the NUD stats collections */
     QCA_NL80211_VENDOR_SUBCMD_NUD_STATS_SET = 149,
     /* Get the NUD stats, represented by the enum qca_attr_nud_stats_get */
@@ -231,6 +230,11 @@ enum qca_nl80211_vendor_subcmds_index {
     QCA_NL80211_VENDOR_SUBCMD_TDLS_STATE_CHANGE_INDEX,
     QCA_NL80211_VENDOR_SUBCMD_NAN_INDEX,
     QCA_NL80211_VENDOR_SUBCMD_WIFI_LOGGER_MEMORY_DUMP_INDEX,
+
+    QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_SET_SSID_HOTLIST_INDEX,
+    QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_RESET_SSID_HOTLIST_INDEX,
+    QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_HOTLIST_SSID_FOUND_INDEX,
+    QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_HOTLIST_SSID_LOST_INDEX,
 
     QCA_NL80211_VENDOR_SUBCMD_MONITOR_RSSI_INDEX,
     QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_HOTLIST_AP_LOST_INDEX,
@@ -291,7 +295,7 @@ enum qca_attr_nud_stats_get {
     QCA_ATTR_NUD_STATS_GET_LAST,
     QCA_ATTR_NUD_STATS_GET_MAX =
             QCA_ATTR_NUD_STATS_GET_LAST - 1,
-};
+ };
 
 enum qca_wlan_vendor_attr
 {
@@ -1043,6 +1047,10 @@ enum qca_wlan_vendor_attr_extscan_results
     /* Unsigned 32bit value; a EXTSCAN Capabilities attribute. */
     QCA_WLAN_VENDOR_ATTR_EXTSCAN_RESULTS_CAPABILITIES_MAX_NUM_WHITELISTED_SSID,
 
+    /* EXTSCAN attributes for
+     * QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_HOTLIST_SSID_FOUND sub-command &
+     * QCA_NL80211_VENDOR_SUBCMD_EXTSCAN_HOTLIST_SSID_LOST sub-command
+     */
     /* Use attr QCA_WLAN_VENDOR_ATTR_EXTSCAN_NUM_RESULTS_AVAILABLE
      * to indicate number of results.
      */
@@ -1162,6 +1170,10 @@ enum qca_wlan_vendor_config {
     QCA_WLAN_VENDOR_ATTR_CONFIG_FINE_TIME_MEASUREMENT,
     QCA_WLAN_VENDOR_ATTR_CONFIG_TX_RATE,
     QCA_WLAN_VENDOR_ATTR_CONFIG_PENALIZE_AFTER_NCONS_BEACON_MISS,
+    /* 8-bit unsigned value to set the beacon miss threshold in 2.4 GHz */
+    QCA_WLAN_VENDOR_ATTR_CONFIG_BEACON_MISS_THRESHOLD_24 = 37,
+    /* 8-bit unsigned value to set the beacon miss threshold in 5 GHz */
+    QCA_WLAN_VENDOR_ATTR_CONFIG_BEACON_MISS_THRESHOLD_5 = 38,
     /* keep last */
     QCA_WLAN_VENDOR_ATTR_CONFIG_LAST,
     QCA_WLAN_VENDOR_ATTR_CONFIG_MAX =
@@ -1508,4 +1520,5 @@ int wlan_hdd_cfg80211_del_station(struct wiphy *wiphy,
 #endif
 
 int wlan_hdd_cfg80211_update_apies(hdd_adapter_t *pHostapdAdapter);
+int wlan_hdd_try_disconnect(hdd_adapter_t *pAdapter);
 #endif
