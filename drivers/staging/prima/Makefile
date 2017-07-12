@@ -57,7 +57,7 @@ ifneq ($(CONFIG_PRONTO_WLAN),)
 CONFIG_WLAN_FEATURE_AP_FIND := y
 
 # Flag to enable feature Software AP Authentication Offload
-SAP_AUTH_OFFLOAD := y
+CONFIG_SAP_AUTH_OFFLOAD := y
 
 # To enable CONFIG_QCOM_ESE_UPLOAD, dependent config
 # CONFIG_QCOM_ESE must be enabled.
@@ -683,7 +683,7 @@ CDEFINES += -DCONFIG_ENABLE_LINUX_REG
 endif
 
 # Enable feature SAP Authentication Offload
-ifeq ($(SAP_AUTH_OFFLOAD), y)
+ifeq ($(CONFIG_SAP_AUTH_OFFLOAD), y)
 CDEFINES += -DSAP_AUTH_OFFLOAD
 endif
 

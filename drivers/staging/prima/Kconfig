@@ -69,6 +69,10 @@ config WLAN_FEATURE_AP_FIND
 	bool "Enable AP Find feature"
 	default n
 
+config SAP_AUTH_OFFLOAD
+	bool "Enable Software AP Authentication Offload"
+	default n
+
 config WLAN_FEATURE_RX_WAKELOCK
 	bool "Enable RX wake lock feature"
 	default n
