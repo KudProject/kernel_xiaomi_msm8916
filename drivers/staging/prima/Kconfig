@@ -29,6 +29,10 @@ config PRIMA_WLAN_LFR
 	bool "Enable the Prima WLAN Legacy Fast Roaming feature"
 	default n
 
+config PRIMA_WLAN_LFR_MBB
+	bool "Enable the Prima WLAN Legacy Fast Roaming Make Before Break feature"
+	default n
+
 config PRIMA_WLAN_OKC
 	bool "Enable the Prima WLAN Opportunistic Key Caching feature"
 	default n
@@ -45,6 +49,10 @@ config QCOM_VOWIFI_11R
 	bool "Enable Fast Transition (11r) feature"
 	default n
 
+config MDNS_OFFLOAD_SUPPORT
+	bool "Enable mDNS feature"
+	default n
+
 config QCOM_TDLS
 	bool "Enable TDLS feature"
 	default n
@@ -55,6 +63,14 @@ config ENABLE_LINUX_REG
 
 config WLAN_OFFLOAD_PACKETS
 	bool "Enable offload packets feature"
+	default n
+
+config WLAN_FEATURE_AP_FIND
+	bool "Enable AP Find feature"
+	default n
+
+config SAP_AUTH_OFFLOAD
+	bool "Enable Software AP Authentication Offload"
 	default n
 
 config WLAN_FEATURE_RX_WAKELOCK
