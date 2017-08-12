@@ -581,6 +581,7 @@ static struct input_handler wg_input_handler = {
 /*
  * SYSFS stuff below here
  */
+#if 0
 static ssize_t sweep2wake_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -629,6 +630,7 @@ static ssize_t sweep2sleep_dump(struct device *dev,
 
 static DEVICE_ATTR(sweep2sleep, (S_IWUSR|S_IRUGO),
 	sweep2sleep_show, sweep2sleep_dump);
+#endif
 
 static ssize_t doubletap2wake_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -768,6 +770,7 @@ static int __init wake_gestures_init(void)
 	if (android_touch_kobj == NULL) {
 		pr_warn("%s: android_touch_kobj create_and_add failed\n", __func__);
 	}
+#if 0
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_sweep2wake.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for sweep2wake\n", __func__);
@@ -776,6 +779,7 @@ static int __init wake_gestures_init(void)
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for sweep2sleep\n", __func__);
 	}
+#endif
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_doubletap2wake.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for doubletap2wake\n", __func__);
