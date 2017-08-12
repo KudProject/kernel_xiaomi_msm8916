@@ -1104,6 +1104,7 @@ config WAKE_GESTURES
 
 config WG_DEBUG
 	bool "Wake Gestures Debug"
+	depends on WAKE_GESTURES
 	help
 	  Say Y here if you want to enable WG debug mode
 
