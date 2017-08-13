@@ -431,6 +431,10 @@ int ist30xx_internal_suspend(struct ist30xx_data *data)
 		ist30xx_power_off(data);
 	}
 #else
+#ifdef CONFIG_WAKE_GESTURES
+	data->suspended = true;
+	ist30xx_reset(data, false);
+#endif
 	ist30xx_power_off(data);
 #endif
 	return 0;
@@ -445,6 +449,10 @@ int ist30xx_internal_resume(struct ist30xx_data *data)
 	else
 		ist30xx_power_on(data, false);
 #else
+#ifdef CONFIG_WAKE_GESTURES
+	data->suspended = false;
+	ist30xx_reset(data, false);
+#endif
 	ist30xx_power_on(data, false);
 #endif
 

@@ -470,6 +470,9 @@ struct ist30xx_data {
 	bool suspend;
 	bool gesture;
 #endif
+#ifdef CONFIG_WAKE_GESTURES
+	bool suspended;
+#endif
 	int scan_count;
 	int scan_retry;
 	int max_scan_retry;

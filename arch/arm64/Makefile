@@ -19,6 +19,7 @@ KBUILD_DEFCONFIG := defconfig
 
 KBUILD_CFLAGS	+= -mgeneral-regs-only
 KBUILD_CFLAGS	+= -fno-pic
+KBUILD_CFLAGS	+= -fno-asynchronous-unwind-tables
 ifeq ($(CONFIG_CPU_BIG_ENDIAN), y)
 KBUILD_CPPFLAGS	+= -mbig-endian
 AS		+= -EB
@@ -58,11 +59,7 @@ libs-y		:= arch/arm64/lib/ $(libs-y)
 ifeq ($(CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE),y)
 KBUILD_IMAGE	:= Image.gz-dtb
 else
-ifeq ($(CONFIG_BUILD_ARM64_UNCOMPRESSED_APPENDED_DTB_IMAGE),y)
-KBUILD_IMAGE	:= Image-dtb
-else
 KBUILD_IMAGE	:= Image.gz
-endif
 endif
 
 KBUILD_DTBS	:= dtbs
@@ -88,7 +85,7 @@ PHONY += vdso_install
 vdso_install:
 	$(Q)$(MAKE) $(build)=arch/arm64/kernel/vdso $@
 
-Image-dtb Image.gz-dtb: vmlinux scripts dtbs
+Image.gz-dtb: vmlinux scripts dtbs
 	$(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
 
 # We use MRPROPER_FILES and CLEAN_FILES now
