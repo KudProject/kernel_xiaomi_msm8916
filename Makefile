@@ -333,8 +333,8 @@ LD		= $(CROSS_COMPILE)ld
 endif
 CC		= ccache $(CROSS_COMPILE)gcc
 CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE)gcc-ar
-NM		= $(CROSS_COMPILE)gcc-nm
+AR		= $(CROSS_COMPILE)ar
+NM		= $(CROSS_COMPILE)nm
 STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
