@@ -10,6 +10,10 @@ NAME = END-OF-LIFE
 # Comments in this file are targeted only to the developer, do not
 # expect to learn how to build the kernel reading this file.
 
+# That's our default target when none is given on the command line
+PHONY := _all
+_all:
+
 # Do not use make's built-in rules and variables
 # (this increases performance and avoids hard-to-debug behaviour);
 MAKEFLAGS += -rR
@@ -106,10 +110,6 @@ endif
 ifeq ("$(origin W)", "command line")
   export KBUILD_ENABLE_EXTRA_GCC_CHECKS := $(W)
 endif
-
-# That's our default target when none is given on the command line
-PHONY := _all
-_all:
 
 # Cancel implicit rules on top Makefile
 $(CURDIR)/Makefile Makefile: ;
