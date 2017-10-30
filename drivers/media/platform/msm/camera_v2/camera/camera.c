@@ -1,5 +1,4 @@
 /* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
- * Copyright (C) 2016 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -209,9 +208,9 @@ static int camera_v4l2_reqbufs(struct file *filep, void *fh,
 	session = msm_session_find(session_id);
 	if (WARN_ON(!session))
 		return -EIO;
-	mutex_lock(&session->lock);
+	mutex_lock(&session->lock_q);
 	ret = vb2_reqbufs(&sp->vb2_q, req);
-	mutex_unlock(&session->lock);
+	mutex_unlock(&session->lock_q);
 	return ret;
 }
 
@@ -232,9 +231,9 @@ static int camera_v4l2_qbuf(struct file *filep, void *fh,
 	session = msm_session_find(session_id);
 	if (WARN_ON(!session))
 		return -EIO;
-	mutex_lock(&session->lock);
+	mutex_lock(&session->lock_q);
 	ret = vb2_qbuf(&sp->vb2_q, pb);
-	mutex_unlock(&session->lock);
+	mutex_unlock(&session->lock_q);
 	return ret;
 }
 
@@ -249,9 +248,9 @@ static int camera_v4l2_dqbuf(struct file *filep, void *fh,
 	session = msm_session_find(session_id);
 	if (WARN_ON(!session))
 		return -EIO;
-	mutex_lock(&session->lock);
+	mutex_lock(&session->lock_q);
 	ret = vb2_dqbuf(&sp->vb2_q, pb, filep->f_flags & O_NONBLOCK);
-	mutex_unlock(&session->lock);
+	mutex_unlock(&session->lock_q);
 	return ret;
 }
 
@@ -668,16 +667,12 @@ static int camera_v4l2_close(struct file *filep)
 		camera_pack_event(filep, MSM_CAMERA_DEL_SESSION, 0, -1, &event);
 
 		/* Donot wait, imaging server may have crashed */
-
-		msm_post_event(&event, MSM_POST_EVT_TIMEOUT);
+		msm_post_event(&event, -1);
 		msm_delete_command_ack_q(pvdev->vdev->num, 0);
 
 		/* This should take care of both normal close
 		 * and application crashes */
 		msm_destroy_session(pvdev->vdev->num);
-
-		/* Enable power collapse latency */
-		msm_pm_qos_update_request(CAMERA_ENABLE_PC_LATENCY);
 
 		pm_relax(&pvdev->vdev->dev);
 	} else {

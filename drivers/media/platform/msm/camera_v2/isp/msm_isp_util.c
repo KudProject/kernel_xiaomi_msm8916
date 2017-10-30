@@ -1,5 +1,4 @@
 /* Copyright (c) 2013-2017, The Linux Foundation. All rights reserved.
- * Copyright (C) 2016 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -186,9 +185,6 @@ int msm_isp_update_bandwidth(enum msm_isp_hw_client client,
 	}
 	ISP_DBG("%s: Total AB = %llu IB = %llu\n", __func__,
 			path->vectors[0].ab, path->vectors[0].ib);
-	if (path->vectors[0].ib < 6400000000) {
-		path->vectors[0].ib = 6400000000;
-			}
 	msm_bus_scale_client_update_request(isp_bandwidth_mgr.bus_client,
 		isp_bandwidth_mgr.bus_vector_active_idx);
 	/* Insert into circular buffer */
@@ -274,6 +270,13 @@ uint32_t msm_isp_get_framedrop_period(
 	case EVERY_6FRAME:
 	case EVERY_7FRAME:
 	case EVERY_8FRAME:
+	case EVERY_9FRAME:
+	case EVERY_10FRAME:
+	case EVERY_11FRAME:
+	case EVERY_12FRAME:
+	case EVERY_13FRAME:
+	case EVERY_14FRAME:
+	case EVERY_15FRAME:
 		return frame_skip_pattern + 1;
 	case EVERY_16FRAME:
 		return 16;
@@ -764,6 +767,16 @@ static long msm_isp_ioctl_unlocked(struct v4l2_subdev *sd,
 			start_fetch_eng(vfe_dev, arg);
 		mutex_unlock(&vfe_dev->core_mutex);
 		break;
+	case VIDIOC_MSM_ISP_REG_UPDATE_CMD:
+		if (arg) {
+			enum msm_vfe_input_src frame_src =
+				*((enum msm_vfe_input_src *)arg);
+			vfe_dev->hw_info->vfe_ops.core_ops.
+				reg_update(vfe_dev, (1 << frame_src));
+			vfe_dev->axi_data.src_info[frame_src].last_updt_frm_id =
+			  vfe_dev->axi_data.src_info[frame_src].frame_id;
+		}
+		break;
 	case VIDIOC_MSM_ISP_SET_SRC_STATE:
 		mutex_lock(&vfe_dev->core_mutex);
 		rc = msm_isp_set_src_state(vfe_dev, arg);
@@ -927,7 +940,8 @@ static int msm_isp_send_hw_cmd(struct vfe_device *vfe_dev,
 			(UINT_MAX - reg_cfg_cmd->u.rw_info.len)) ||
 			((reg_cfg_cmd->u.rw_info.reg_offset +
 			reg_cfg_cmd->u.rw_info.len) >
-			resource_size(vfe_dev->vfe_mem))) {
+			resource_size(vfe_dev->vfe_mem)) ||
+			(reg_cfg_cmd->u.rw_info.reg_offset & 0x3)) {
 			pr_err("%s:%d reg_offset %d len %d res %d\n",
 				__func__, __LINE__,
 				reg_cfg_cmd->u.rw_info.reg_offset,
@@ -955,7 +969,8 @@ static int msm_isp_send_hw_cmd(struct vfe_device *vfe_dev,
 	case VFE_READ_DMI_16BIT:
 	case VFE_READ_DMI_32BIT:
 	case VFE_READ_DMI_64BIT: {
-		if (reg_cfg_cmd->cmd_type == VFE_WRITE_DMI_64BIT) {
+		if (reg_cfg_cmd->cmd_type == VFE_WRITE_DMI_64BIT ||
+			reg_cfg_cmd->cmd_type == VFE_READ_DMI_64BIT) {
 			if ((reg_cfg_cmd->u.dmi_info.hi_tbl_offset <=
 				reg_cfg_cmd->u.dmi_info.lo_tbl_offset) ||
 				(reg_cfg_cmd->u.dmi_info.hi_tbl_offset -
@@ -1025,7 +1040,8 @@ static int msm_isp_send_hw_cmd(struct vfe_device *vfe_dev,
 			reg_cfg_cmd->u.mask_info.reg_offset) ||
 			(resource_size(vfe_dev->vfe_mem) <
 			reg_cfg_cmd->u.mask_info.reg_offset +
-			sizeof(temp))) {
+			sizeof(temp)) ||
+			(reg_cfg_cmd->u.mask_info.reg_offset & 0x3)) {
 			pr_err("%s: VFE_CFG_MASK: Invalid length\n", __func__);
 			return -EINVAL;
 		}
@@ -1114,11 +1130,9 @@ static int msm_isp_send_hw_cmd(struct vfe_device *vfe_dev,
 	case VFE_HW_UPDATE_LOCK: {
 		uint32_t update_id =
 			vfe_dev->axi_data.src_info[VFE_PIX_0].last_updt_frm_id;
-		if (vfe_dev->axi_data.src_info[VFE_PIX_0].frame_id != *cfg_data
-			|| update_id == *cfg_data) {
-			ISP_DBG("%s hw update lock failed acq %d, cur id %u, last id %u\n",
+		if (update_id) {
+			ISP_DBG("%s hw update lock failed cur id %u, last id %u\n",
 				__func__,
-				*cfg_data,
 				vfe_dev->axi_data.src_info[VFE_PIX_0].frame_id,
 				update_id);
 			return -EINVAL;
@@ -1742,6 +1756,8 @@ void msm_isp_do_tasklet(unsigned long data)
 		irq_ops->process_stats_irq(vfe_dev,
 			irq_status0, irq_status1, &ts);
 		irq_ops->process_reg_update(vfe_dev,
+			irq_status0, irq_status1, &ts);
+		irq_ops->process_epoch_irq(vfe_dev,
 			irq_status0, irq_status1, &ts);
 	}
 }
