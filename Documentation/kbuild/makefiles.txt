@@ -1184,7 +1184,6 @@ When kbuild executes, the following steps are followed (roughly):
 
 	Example:
 		targets += $(dtb-y)
-		clean-files += *.dtb
 		DTC_FLAGS ?= -p 1024
 
     dtc_cpp
